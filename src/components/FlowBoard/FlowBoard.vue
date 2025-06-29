@@ -48,21 +48,23 @@ import {
   QBtn, QIcon
 } from 'quasar'
 
+// X común para centrar todos los nodos
 const centerX = 80
 
 const nodes = ref([
-  { id: 'start', type: 'start', position: { x: centerX, y:   0 }, data: { label: 'Inicio' } },
-  { id: 'add-0', type: 'add',   position: { x: 138, y:  80 } },
-  { id: 'end',   type: 'end',   position: { x: centerX, y: 160 }, data: { label: 'Fin' } },
+  { id: 'start',    type: 'start',       position: { x: centerX, y:   0 }, data: { label: 'Inicio' } },
+  { id: 'add-0',    type: 'add',         position: { x: 138, y:  80 } },
+  { id: 'end',      type: 'end',         position: { x: centerX, y: 160 }, data: { label: 'Fin' } },
 ])
 
 const edges = ref([])
 
 const nodeTypes = {
-  add:        AddNode,
+  add:          AddNode,
   'simple-step': NodeSimpleStep,
 }
 
+// reconstruye todas las conexiones en orden vertical
 function rebuildEdges() {
   const ordered = [...nodes.value].sort((a,b)=> a.position.y - b.position.y)
   edges.value = ordered.slice(0, -1).map((src, i) => ({
@@ -75,6 +77,7 @@ function rebuildEdges() {
   }))
 }
 
+// llamada inicial
 rebuildEdges()
 
 const sidebarOpen = ref(false)
@@ -86,26 +89,36 @@ function onNodeClick({ node }) {
 }
 
 function addSimpleNode() {
-  const lastAdd = nodes.value.filter(n=>n.type==='add').pop()
+  // 1) localiza el último '+'
+  const lastAdd = nodes.value.filter(n => n.type === 'add').pop()
   if (!lastAdd) return
 
   const y0 = lastAdd.position.y
   const simpleId = `simple-${Date.now()}`
   const newAddId = `add-${Date.now()}`
 
-  // elimina el último nodo "add"
-  nodes.value = nodes.value.filter(n => n.id !== lastAdd.id)
+  // 2) baja 'Fin' un nivel
+  const endNode = nodes.value.find(n => n.id === 'end')
+  if (endNode) {
+    endNode.position = { x: centerX, y: y0 + 180 }
+  }
 
-  // desplaza "Fin" hacia abajo
-  const endNode = nodes.value.find(n=>n.id==='end')
-  if (endNode) endNode.position = { x: 80, y: y0 + 180 }
-
-  // inserta "Paso simple" y un nuevo "add", centrados en X
+  // 3) inserta el nuevo paso y un '+' debajo (sin eliminar el '+' anterior)
   nodes.value.push(
-    { id: simpleId,    type: 'simple-step', position: { x: 65, y: y0 +  60 }, data: {} },
-    { id: newAddId,    type: 'add',         position: { x: 138, y: y0 + 120 }        }
+    {
+      id: simpleId,
+      type: 'simple-step',
+      position: { x: 65, y: y0 +  60 },
+      data: {}
+    },
+    {
+      id: newAddId,
+      type: 'add',
+      position: { x: 138, y: y0 + 120 }
+    }
   )
 
+  // 4) vuelve a generar las edges
   rebuildEdges()
   sidebarOpen.value = false
 }
@@ -118,7 +131,6 @@ function addSimpleNode() {
 }
 .flow-bg {
   background-color: #f4f4f4;
-  cursor: grab;
   background-image: radial-gradient(#bbb 1px, transparent 1px);
   background-size: 20px 20px;
 }
