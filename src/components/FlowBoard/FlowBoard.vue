@@ -1,9 +1,9 @@
 <template>
   <div class="flow-board">
     <VueFlow
-      v-model="elements"
+      v-model:nodes="nodes"
+      v-model:edges="edges"
       :node-types="nodeTypes"
-      :default-viewport="{ zoom: 1, x: 0, y: 0 }"
       :nodes-draggable="false"
       :nodes-connectable="false"
       :elements-selectable="false"
@@ -13,11 +13,50 @@
       fit-view
       @node-click="onNodeClick"
     />
+
+    <q-drawer
+      v-model="sidebarOpen"
+      side="right"
+       :width="300"
+      :breakpoint="0"
+      overlay
+      
+    >
+      <q-toolbar>
+        <q-toolbar-title>Agregar Nodo</q-toolbar-title>
+      </q-toolbar>
+      <q-list>
+        <q-item>
+          <q-item-section>
+            Aquí va el contenido del sidebar.
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-drawer>
   </div>
+  <q-drawer
+      v-model="sidebarOpen"
+      side="right"
+       :width="300"
+      :breakpoint="0"
+      overlay
+      
+    >
+      <q-toolbar>
+        <q-toolbar-title>Agregar Nodo</q-toolbar-title>
+      </q-toolbar>
+      <q-list>
+        <q-item>
+          <q-item-section>
+            Aquí va el contenido del sidebar.
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-drawer>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { VueFlow } from "@vue-flow/core";
 import AddNode from "../AddNode/AddNode.vue";
 import {
@@ -29,8 +68,7 @@ import {
   QItemSection,
 } from "quasar";
 
-// Solo un nodo: "start" de tipo "start"
-const elements = ref([
+const nodes = ref([
   {
     id: "start",
     type: "start",
@@ -40,30 +78,46 @@ const elements = ref([
   {
     id: "add",
     type: "add",
-    position: { x: 80, y:50 },
+    position: { x: 80, y: 50 },
   },
   {
     id: "end",
     type: "end",
     position: { x: 70, y: 100 },
     data: { label: "Fin" },
-  }
+  },
 ]);
 
-// Podemos definir un componente custom para type "start" si hace falta,
-// por ahora no se registra ninguno especial:
+const edges = ref([
+  {
+    id: "e-start-add",
+    source: "start",
+    target: "add",
+    type: "default",
+  },
+  {
+    id: "e-add-end",
+    source: "add",
+    target: "end",
+    type: "default",
+  },
+]);
+
 const nodeTypes = {
-  // start: StartNodeComponent, // si más adelante creas un componente custom
   add: AddNode,
 };
 
 const sidebarOpen = ref(false);
 
-function onNodeClick(event, node) {
-  if (node.type === "add") {
+function onNodeClick({ node }) {
+  if (node?.type === "add") {
     sidebarOpen.value = true;
   }
 }
+
+watch(sidebarOpen, (val) => {
+  console.log("Sidebar ahora está", val ? "abierto" : "cerrado");
+});
 </script>
 
 <style scoped lang="scss">
@@ -83,7 +137,7 @@ function onNodeClick(event, node) {
 }
 
 :deep(.vue-flow__node[data-id="start"]),
-:deep(.vue-flow__node[data-id="end"]){
+:deep(.vue-flow__node[data-id="end"]) {
   justify-content: center;
   display: flex;
   padding: 8px;
@@ -91,12 +145,11 @@ function onNodeClick(event, node) {
 }
 
 :deep(.vue-flow__node[data-id="start"]) {
-
   background-color: #90ee90;
   max-width: 200px;
 }
-:deep(.vue-flow__node[data-id="end"]){
-background-color: #bbb;
-max-width: 50px;
+:deep(.vue-flow__node[data-id="end"]) {
+  background-color: #bbb;
+  max-width: 50px;
 }
 </style>
