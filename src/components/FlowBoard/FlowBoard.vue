@@ -110,6 +110,7 @@ import { useVueFlow } from "@vue-flow/core";
 // Constantes y estado inicial
 const centerX = 250;
 const { updateNodeInternals } = useVueFlow();
+const lastEndPosition = ref(null);
 
 const nodes = ref([
   {
@@ -170,7 +171,7 @@ function rebuildEdges() {
           (n) =>
             n.type === "add" &&
             Math.abs(n.position.y - leftNode.position.y - 80) < 10 &&
-            Math.abs(n.position.x - (centerX - 92)) < 10
+            Math.abs(n.position.x - leftNode.position.x) < 10
         );
 
         if (leftAdd) {
@@ -188,7 +189,7 @@ function rebuildEdges() {
             (n) =>
               n.type === "end" &&
               Math.abs(n.position.y - leftAdd.position.y - 80) < 10 &&
-              Math.abs(n.position.x - (centerX - 150)) < 10
+              n.position.x === leftNode.position.x
           );
 
           if (leftEnd) {
@@ -219,7 +220,7 @@ function rebuildEdges() {
           (n) =>
             n.type === "add" &&
             Math.abs(n.position.y - rightNode.position.y - 80) < 10 &&
-            Math.abs(n.position.x - (centerX + 208)) < 10
+            Math.abs(n.position.x - rightNode.position.x) < 10
         );
 
         if (rightAdd) {
@@ -237,7 +238,7 @@ function rebuildEdges() {
             (n) =>
               n.type === "end" &&
               Math.abs(n.position.y - rightAdd.position.y - 80) < 10 &&
-              Math.abs(n.position.x - (centerX + 150)) < 10
+              n.position.x === rightNode.position.x
           );
 
           if (rightEnd) {
@@ -252,12 +253,12 @@ function rebuildEdges() {
           }
         }
       }
-    } else if (node.type !== "end" && node.type !== "branch-child") {
+    } else if (node.type !== "end" ) {
       // Encontrar siguiente nodo en la misma columna
       const nextNode = nodes.value.find(
         (n) =>
           n.position.y > node.position.y &&
-          Math.abs(n.position.x - node.position.x) < 10
+          n.position.x === node.position.x
       );
 
       if (nextNode) {
@@ -341,17 +342,18 @@ function addSimpleNode() {
   });
 
   // Insertar nuevo paso y botón add
+  const parentX = editingNode.value.position.x;
   nodes.value.push(
     {
       id: simpleId,
       type: "simple-step",
-      position: { x: centerX - 15, y: clickedY + 60 },
+      position: { x: 235, y: clickedY + 60 },
       data: { label: "Paso simple" },
     },
     {
       id: newAddId,
       type: "add",
-      position: { x: centerX + 58, y: clickedY + 120 },
+      position: { x: parentX, y: clickedY + 120 },
     }
   );
 
@@ -362,6 +364,9 @@ function addSimpleNode() {
 // Agregar un nuevo nodo rama
 function addBranchNode() {
   if (!editingNode.value) return;
+   // ── Añade este offset horizontal ──
+  const branchOffsetX = -20; // mueve 20px a la izquierda
+
 
   const clickedY = editingNode.value.position.y;
   const branchId = `branch-${Date.now()}`;
@@ -372,9 +377,11 @@ function addBranchNode() {
   const leftEndId = `end-left-${Date.now()}`;
   const rightEndId = `end-right-${Date.now()}`;
 
-  // Eliminar el nodo fin original
+  // Guardar y eliminar el nodo fin original
   const endNodeIndex = nodes.value.findIndex((n) => n.id === "end");
   if (endNodeIndex !== -1) {
+    const endNode = nodes.value[endNodeIndex];
+    lastEndPosition.value = { ...endNode.position };
     nodes.value.splice(endNodeIndex, 1);
   }
 
@@ -387,45 +394,48 @@ function addBranchNode() {
   });
 
   // Insertar nodo rama, nodos hijos y botones add
+  // const parentX = editingNode.value.position.x;
+  const parentX= 250
+  
   nodes.value.push(
     {
       id: branchId,
       type: "branch",
-      position: { x: centerX, y: clickedY + 60 },
+      position: { x: parentX, y: clickedY + 60 },
       data: { label: "Bifurcación" },
     },
     {
       id: leftId,
       type: "branch-child",
-      position: { x: centerX - 150, y: clickedY + 160 },
+      position: { x: parentX - 150, y: clickedY + 160 },
       data: { label: "Nombre de rama" },
     },
     {
       id: rightId,
       type: "branch-child",
-      position: { x: centerX + 150, y: clickedY + 160 },
+      position: { x: parentX + 150, y: clickedY + 160 },
       data: { label: "Nombre de rama" },
     },
     {
       id: leftAddId,
       type: "add",
-      position: { x: centerX - 92, y: clickedY + 240 },
+      position: { x: parentX - 92, y: clickedY + 240 },
     },
     {
       id: rightAddId,
       type: "add",
-      position: { x: centerX + 208, y: clickedY + 240 },
+      position: { x: parentX + 208, y: clickedY + 240 },
     },
     {
       id: leftEndId,
       type: "end",
-      position: { x: centerX - 150, y: clickedY + 320 },
+      position: { x: parentX - 150, y: clickedY + 320 },
       data: { label: "Fin" },
     },
     {
       id: rightEndId,
       type: "end",
-      position: { x: centerX + 150, y: clickedY + 320 },
+      position: { x: parentX + 150, y: clickedY + 320 },
       data: { label: "Fin" },
     }
   );
@@ -480,26 +490,94 @@ function deleteNode() {
   )
     return;
 
-  // Encontrar el nodo anterior y siguiente
   const currentY = editingNode.value.position.y;
-  const prevNode = nodes.value.find(
-    (n) =>
-      n.position.y < currentY &&
-      Math.abs(n.position.x - editingNode.value.position.x) < 10
-  );
-  const nextNode = nodes.value.find(
-    (n) =>
-      n.position.y > currentY &&
-      Math.abs(n.position.x - editingNode.value.position.x) < 10
-  );
+  const nodesToDelete = [];
 
-  // Eliminar el nodo actual
-  nodes.value = nodes.value.filter((n) => n.id !== editingNode.value.id);
+  if (editingNode.value.type === "branch") {
+    // Encontrar nodos hijos de la rama
+    const leftNode = nodes.value.find(
+      (n) =>
+        Math.abs(n.position.y - currentY - 100) < 10 &&
+        Math.abs(n.position.x - (editingNode.value.position.x - 150)) < 10
+    );
+    const rightNode = nodes.value.find(
+      (n) =>
+        Math.abs(n.position.y - currentY - 100) < 10 &&
+        Math.abs(n.position.x - (editingNode.value.position.x + 150)) < 10
+    );
+
+    // Encontrar botones add y nodos fin
+    if (leftNode) {
+      nodesToDelete.push(leftNode.id);
+      const leftAdd = nodes.value.find(
+        (n) =>
+          n.type === "add" &&
+          Math.abs(n.position.y - leftNode.position.y - 80) < 10 &&
+          Math.abs(n.position.x - (centerX - 92)) < 10
+      );
+      if (leftAdd) nodesToDelete.push(leftAdd.id);
+
+      const leftEnd = nodes.value.find(
+        (n) =>
+          n.type === "end" &&
+          Math.abs(n.position.y - leftNode.position.y - 160) < 10 &&
+          Math.abs(n.position.x - (centerX - 150)) < 10
+      );
+      if (leftEnd) nodesToDelete.push(leftEnd.id);
+    }
+
+    if (rightNode) {
+      nodesToDelete.push(rightNode.id);
+      const rightAdd = nodes.value.find(
+        (n) =>
+          n.type === "add" &&
+          Math.abs(n.position.y - rightNode.position.y - 80) < 10 &&
+          Math.abs(n.position.x - (centerX + 208)) < 10
+      );
+      if (rightAdd) nodesToDelete.push(rightAdd.id);
+
+      const rightEnd = nodes.value.find(
+        (n) =>
+          n.type === "end" &&
+          Math.abs(n.position.y - rightNode.position.y - 160) < 10 &&
+          Math.abs(n.position.x - (centerX + 150)) < 10
+      );
+      if (rightEnd) nodesToDelete.push(rightEnd.id);
+    }
+  }
+
+  // Agregar el nodo actual a la lista de eliminación
+  nodesToDelete.push(editingNode.value.id);
+
+  // Eliminar todos los nodos marcados
+  nodes.value = nodes.value.filter((n) => !nodesToDelete.includes(n.id));
+
+  // Si es una rama, restaurar el nodo fin original en su posición anterior
+  if (editingNode.value.type === "branch" && lastEndPosition.value) {
+    // Ajustar la posición Y del nodo fin para que esté por debajo del último nodo
+    const lastNode = nodes.value.reduce((max, node) => {
+      return node.position.y > max.position.y ? node : max;
+    }, nodes.value[0]);
+
+    const newEndPosition = {
+      x: centerX,
+      y: lastNode.position.y + (lastNode.type === "add" ? 80 : 120),
+    };
+
+    nodes.value.push({
+      id: "end",
+      type: "end",
+      position: newEndPosition,
+      data: { label: "Fin" },
+    });
+    lastEndPosition.value = null;
+  }
 
   // Ajustar posiciones de los nodos siguientes
   const nodesAfter = nodes.value.filter((n) => n.position.y > currentY);
+  const yOffset = editingNode.value.type === "branch" ? 320 : 120;
   nodesAfter.forEach((node) => {
-    node.position.y -= 120;
+    node.position.y -= yOffset;
   });
 
   rebuildEdges();
