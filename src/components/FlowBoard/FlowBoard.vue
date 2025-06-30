@@ -160,6 +160,24 @@ function rebuildEdges() {
             sourceHandle: 'bottom',
             targetHandle: 'top'
           })
+
+          // Encontrar y conectar con el nodo fin izquierdo
+          const leftEnd = nodes.value.find(n => 
+            n.type === 'end' &&
+            Math.abs(n.position.y - leftAdd.position.y - 80) < 10 && 
+            Math.abs(n.position.x - leftNode.position.x) < 10
+          )
+
+          if (leftEnd) {
+            edges.value.push({
+              id: `e-${leftAdd.id}-${leftEnd.id}`,
+              source: leftAdd.id,
+              target: leftEnd.id,
+              type: 'straight',
+              sourceHandle: 'bottom',
+              targetHandle: 'top'
+            })
+          }
         }
       }
 
@@ -189,6 +207,24 @@ function rebuildEdges() {
             sourceHandle: 'bottom',
             targetHandle: 'top'
           })
+
+          // Encontrar y conectar con el nodo fin derecho
+          const rightEnd = nodes.value.find(n => 
+            n.type === 'end' &&
+            Math.abs(n.position.y - rightAdd.position.y - 80) < 10 && 
+            Math.abs(n.position.x - rightNode.position.x) < 10
+          )
+
+          if (rightEnd) {
+            edges.value.push({
+              id: `e-${rightAdd.id}-${rightEnd.id}`,
+              source: rightAdd.id,
+              target: rightEnd.id,
+              type: 'straight',
+              sourceHandle: 'bottom',
+              targetHandle: 'top'
+            })
+          }
         }
       }
     } else if (node.type !== 'end' && node.type !== 'branch-child') {
@@ -307,13 +343,21 @@ function addBranchNode() {
   const rightId = `simple-right-${Date.now()}`
   const leftAddId = `add-left-${Date.now()}`
   const rightAddId = `add-right-${Date.now()}`
+  const leftEndId = `end-left-${Date.now()}`
+  const rightEndId = `end-right-${Date.now()}`
+
+  // Eliminar el nodo fin original
+  const endNodeIndex = nodes.value.findIndex(n => n.id === 'end')
+  if (endNodeIndex !== -1) {
+    nodes.value.splice(endNodeIndex, 1)
+  }
 
   // Encontrar todos los nodos después del punto de inserción
   const nodesAfter = nodes.value.filter(n => n.position.y > clickedY)
 
   // Mover todos los nodos posteriores hacia abajo
   nodesAfter.forEach(node => {
-    node.position.y += 200
+    node.position.y += 320
   })
 
   // Insertar nodo rama, nodos hijos y botones add
@@ -321,30 +365,42 @@ function addBranchNode() {
     {
       id: branchId,
       type: 'branch',
-      position: { x: centerX + 50, y: clickedY + 60 },
+      position: { x: centerX, y: clickedY + 60 },
       data: { label: 'Bifurcación' }
     },
     {
       id: leftId,
       type: 'branch-child',
-      position: { x: centerX - 100, y: clickedY + 160 },
+      position: { x: centerX - 150, y: clickedY + 160 },
       data: { label: 'Nombre de rama' }
     },
     {
       id: rightId,
       type: 'branch-child',
-      position: { x: centerX + 200, y: clickedY + 160 },
+      position: { x: centerX + 150, y: clickedY + 160 },
       data: { label: 'Nombre de rama' }
     },
     {
       id: leftAddId,
       type: 'add',
-      position: { x: centerX - 27, y: clickedY + 240 }
+      position: { x: centerX - 77, y: clickedY + 240 }
     },
     {
       id: rightAddId,
       type: 'add',
-      position: { x: centerX + 273, y: clickedY + 240 }
+      position: { x: centerX + 223, y: clickedY + 240 }
+    },
+    {
+      id: leftEndId,
+      type: 'end',
+      position: { x: centerX - 150, y: clickedY + 320 },
+      data: { label: 'Fin' }
+    },
+    {
+      id: rightEndId,
+      type: 'end',
+      position: { x: centerX + 200, y: clickedY + 320 },
+      data: { label: 'Fin' }
     }
   )
 
