@@ -35,15 +35,43 @@
           </q-item-section>
           <q-item-section>Paso simple</q-item-section>
         </q-item>
+        <q-item clickable @click="addBranchNode">
+          <q-item-section avatar>
+            <q-icon name="call_split" color="orange" />
+          </q-item-section>
+          <q-item-section>Bifurcación</q-item-section>
+        </q-item>
       </q-list>
 
       <div v-if="editingNode && editingNode.type !== 'add'" class="q-pa-md">
-        <q-input
-          v-model="editingLabel"
-          label="Nombre del paso"
-          dense
-          autofocus
-        />
+        <template v-if="editingNode.type === 'branch'">
+          <q-input
+            v-model="editingLabel"
+            label="Nombre de la bifurcación"
+            dense
+            autofocus
+            class="q-mb-sm"
+          />
+          <q-input
+            v-model="branchLeftLabel"
+            label="Nombre rama izquierda"
+            dense
+            class="q-mb-sm"
+          />
+          <q-input
+            v-model="branchRightLabel"
+            label="Nombre rama derecha"
+            dense
+          />
+        </template>
+        <template v-else>
+          <q-input
+            v-model="editingLabel"
+            label="Nombre del paso"
+            dense
+            autofocus
+          />
+        </template>
         <div class="q-mt-md row justify-between">
               <q-btn color="negative" icon="delete" label="Eliminar" @click="deleteNode" />
             <q-btn flat label="Cancelar" @click="closeSidebar" class="q-mr-sm" />
@@ -61,7 +89,8 @@
 import { ref } from 'vue'
 import { VueFlow } from '@vue-flow/core'
 import NodeSimpleStep from '../NodeSimple/NodeSimpleStep.vue'
-import AddNode         from '../AddNode/AddNode.vue'
+import NodeBranch from '../NodeBranch/NodeBranch.vue'
+import AddNode from '../AddNode/AddNode.vue'
 import {
   QDrawer, QToolbar, QToolbarTitle,
   QList, QItem, QItemSection,
@@ -83,31 +112,81 @@ const edges = ref([])
 const nodeTypes = {
   add: AddNode,
   'simple-step': NodeSimpleStep,
+  branch: NodeBranch
 }
 
 // Reconstruye las edges
 function rebuildEdges() {
-  const ordered = [...nodes.value].sort((a,b)=> a.position.y - b.position.y)
-  edges.value = ordered.slice(0, -1).map((src, i) => ({
-    id: `e-${src.id}-${ordered[i+1].id}`,
-    source: src.id,
-    target: ordered[i+1].id,
-    type: 'straight',
-    sourceHandle: 'bottom',
-    targetHandle: 'top'
-  }))
+  edges.value = []
+  
+  nodes.value.forEach(node => {
+    if (node.type === 'branch') {
+      // Encontrar nodos hijos de la rama
+      const leftNode = nodes.value.find(n => 
+        Math.abs(n.position.y - node.position.y - 80) < 10 && 
+        Math.abs(n.position.x - (node.position.x - 200)) < 10
+      )
+      const rightNode = nodes.value.find(n => 
+        Math.abs(n.position.y - node.position.y - 80) < 10 && 
+        Math.abs(n.position.x - (node.position.x + 200)) < 10
+      )
+
+      // Conectar rama con sus hijos
+      if (leftNode) {
+        edges.value.push({
+          id: `e-${node.id}-${leftNode.id}`,
+          source: node.id,
+          target: leftNode.id,
+          type: 'smoothstep',
+          sourceHandle: 'left',
+          targetHandle: 'top'
+        })
+      }
+      if (rightNode) {
+        edges.value.push({
+          id: `e-${node.id}-${rightNode.id}`,
+          source: node.id,
+          target: rightNode.id,
+          type: 'smoothstep',
+          sourceHandle: 'right',
+          targetHandle: 'top'
+        })
+      }
+    } else if (node.type !== 'end') {
+      // Encontrar siguiente nodo en la misma columna
+      const nextNode = nodes.value.find(n => 
+        n.position.y > node.position.y && 
+        Math.abs(n.position.x - node.position.x) < 10
+      )
+      
+      if (nextNode) {
+        edges.value.push({
+          id: `e-${node.id}-${nextNode.id}`,
+          source: node.id,
+          target: nextNode.id,
+          type: 'straight',
+          sourceHandle: 'bottom',
+          targetHandle: 'top'
+        })
+      }
+    }
+  })
 }
 rebuildEdges()
 
 // Sidebar
 const sidebarOpen   = ref(false)
-const editingNode   = ref(null)      // nodo que estamos editando
-const editingLabel  = ref('')        // etiqueta del input
+const editingNode = ref(null)      // nodo que estamos editando
+const editingLabel = ref('')        // etiqueta del input
+const branchLeftLabel = ref('')    // etiqueta rama izquierda
+const branchRightLabel = ref('')   // etiqueta rama derecha
 
 function closeSidebar() {
   sidebarOpen.value = false
   editingNode.value = null
   editingLabel.value = ''
+  branchLeftLabel.value = ''
+  branchRightLabel.value = ''
 }
 
 // Maneja clicks en nodos
@@ -121,6 +200,25 @@ function onNodeClick({ node }) {
     // modo Editar
     editingNode.value = node
     editingLabel.value = node.data.label || ''
+    sidebarOpen.value = true
+  }
+  else if (node.type === 'branch') {
+    // modo Editar rama
+    editingNode.value = node
+    editingLabel.value = node.data.label || ''
+    
+    // Buscar nodos hijos (izquierda y derecha)
+    const leftNode = nodes.value.find(n => 
+      Math.abs(n.position.y - node.position.y - 100) < 10 && 
+      Math.abs(n.position.x - (node.position.x - 150)) < 10
+    )
+    const rightNode = nodes.value.find(n => 
+      Math.abs(n.position.y - node.position.y - 100) < 10 && 
+      Math.abs(n.position.x - (node.position.x + 150)) < 10
+    )
+    
+    branchLeftLabel.value = leftNode?.data.label || ''
+    branchRightLabel.value = rightNode?.data.label || ''
     sidebarOpen.value = true
   }
 }
@@ -160,14 +258,92 @@ function addSimpleNode() {
   sidebarOpen.value = false
 }
 
+// Agregar un nuevo nodo rama
+function addBranchNode() {
+  if (!editingNode.value) return
+
+  const clickedY = editingNode.value.position.y
+  const branchId = `branch-${Date.now()}`
+  const leftId = `simple-left-${Date.now()}`
+  const rightId = `simple-right-${Date.now()}`
+  const leftAddId = `add-left-${Date.now()}`
+  const rightAddId = `add-right-${Date.now()}`
+
+  // Encontrar todos los nodos después del punto de inserción
+  const nodesAfter = nodes.value.filter(n => n.position.y > clickedY)
+
+  // Mover todos los nodos posteriores hacia abajo
+  nodesAfter.forEach(node => {
+    node.position.y += 200
+  })
+
+  // Insertar nodo rama, nodos hijos y botones add
+  nodes.value.push(
+    {
+      id: branchId,
+      type: 'branch',
+      position: { x: centerX + 50, y: clickedY + 60 },
+      data: { label: 'Bifurcación' }
+    },
+    {
+      id: leftId,
+      type: 'simple-step',
+      position: { x: centerX - 100, y: clickedY + 160 },
+      data: { label: 'Nombre de rama' }
+    },
+    {
+      id: rightId,
+      type: 'simple-step',
+      position: { x: centerX + 200, y: clickedY + 160 },
+      data: { label: 'Nombre de rama' }
+    },
+    {
+      id: leftAddId,
+      type: 'add',
+      position: { x: centerX - 27, y: clickedY + 240 }
+    },
+    {
+      id: rightAddId,
+      type: 'add',
+      position: { x: centerX + 273, y: clickedY + 240 }
+    }
+  )
+
+  rebuildEdges()
+  sidebarOpen.value = false
+}
+
 // Guardar edición de nombre
 function saveEdit() {
   if (editingNode.value) {
-    // 1) actualizo la etiqueta
-    editingNode.value.data.label = editingLabel.value
+    if (editingNode.value.type === 'branch') {
+      // Actualizar etiqueta del nodo rama
+      editingNode.value.data.label = editingLabel.value
+      updateNodeInternals(editingNode.value.id)
 
-    // 2) le digo a VueFlow que re‐internalice este nodo
-    updateNodeInternals(editingNode.value.id)
+      // Actualizar etiquetas de los nodos hijos
+      const leftNode = nodes.value.find(n => 
+        Math.abs(n.position.y - editingNode.value.position.y - 100) < 10 && 
+        Math.abs(n.position.x - (editingNode.value.position.x - 150)) < 10
+      )
+      const rightNode = nodes.value.find(n => 
+        Math.abs(n.position.y - editingNode.value.position.y - 100) < 10 && 
+        Math.abs(n.position.x - (editingNode.value.position.x + 150)) < 10
+      )
+
+      if (leftNode) {
+        leftNode.data.label = branchLeftLabel.value
+        updateNodeInternals(leftNode.id)
+      }
+      if (rightNode) {
+        rightNode.data.label = branchRightLabel.value
+        updateNodeInternals(rightNode.id)
+      }
+    } else {
+      // Actualizar etiqueta de nodo simple
+      editingNode.value.data.label = editingLabel.value
+      updateNodeInternals(editingNode.value.id)
+    }
   }
   closeSidebar()
 }
