@@ -362,46 +362,39 @@ function addSimpleNode() {
 }
 
 // Agregar un nuevo nodo rama
+
 function addBranchNode() {
   if (!editingNode.value) return;
-   // ── Añade este offset horizontal ──
-  const branchOffsetX = -20; // mueve 20px a la izquierda
-
 
   const clickedY = editingNode.value.position.y;
-  const branchId = `branch-${Date.now()}`;
-  const leftId = `simple-left-${Date.now()}`;
-  const rightId = `simple-right-${Date.now()}`;
-  const leftAddId = `add-left-${Date.now()}`;
+
+  // 1) ¿Hay ya alguna bifurcación en el canvas?
+  const hasBranch = nodes.value.some(n => n.type === "branch");
+
+  // 2) parentX = centerX solo la primera vez, luego offset relativo al add clicado
+  const parentX = !hasBranch
+    ? centerX
+    : editingNode.value.position.x - 60;
+
+  // Generamos los ids
+  const branchId   = `branch-${Date.now()}`;
+  const leftId     = `simple-left-${Date.now()}`;
+  const rightId    = `simple-right-${Date.now()}`;
+  const leftAddId  = `add-left-${Date.now()}`;
   const rightAddId = `add-right-${Date.now()}`;
-  const leftEndId = `end-left-${Date.now()}`;
+  const leftEndId  = `end-left-${Date.now()}`;
   const rightEndId = `end-right-${Date.now()}`;
 
-  // Guardar y eliminar el nodo fin original
-  const endNodeIndex = nodes.value.findIndex((n) => n.id === "end");
-  if (endNodeIndex !== -1) {
-    const endNode = nodes.value[endNodeIndex];
-    lastEndPosition.value = { ...endNode.position };
-    nodes.value.splice(endNodeIndex, 1);
-  }
+  // Movemos todo lo que venga después hacia abajo
+  const nodesAfter = nodes.value.filter(n => n.position.y > clickedY);
+  nodesAfter.forEach(n => n.position.y += 320);
 
-  // Encontrar todos los nodos después del punto de inserción
-  const nodesAfter = nodes.value.filter((n) => n.position.y > clickedY);
-
-  // Mover todos los nodos posteriores hacia abajo
-  nodesAfter.forEach((node) => {
-    node.position.y += 320;
-  });
-
-  // Insertar nodo rama, nodos hijos y botones add
-  // const parentX = editingNode.value.position.x;
-  const parentX= 250
-  
+  // Insertamos
   nodes.value.push(
     {
       id: branchId,
       type: "branch",
-      position: { x: parentX, y: clickedY + 60 },
+      position: { x: parentX,       y: clickedY + 60 },
       data: { label: "Bifurcación" },
     },
     {
@@ -419,7 +412,7 @@ function addBranchNode() {
     {
       id: leftAddId,
       type: "add",
-      position: { x: parentX - 92, y: clickedY + 240 },
+      position: { x: parentX - 92,  y: clickedY + 240 },
     },
     {
       id: rightAddId,
@@ -443,7 +436,6 @@ function addBranchNode() {
   rebuildEdges();
   sidebarOpen.value = false;
 }
-
 // Guardar edición de nombre
 function saveEdit() {
   if (editingNode.value) {
