@@ -28,7 +28,7 @@
         <q-btn flat round icon="close" @click="closeSidebar" />
       </q-toolbar>
 
-      <q-list v-if="!editingNode">
+      <q-list v-if="editingNode?.type === 'add'">
         <q-item clickable @click="addSimpleNode">
           <q-item-section avatar>
             <q-icon name="insert_drive_file" color="green" />
@@ -37,7 +37,7 @@
         </q-item>
       </q-list>
 
-      <div v-else class="q-pa-md">
+      <div v-if="editingNode && editingNode.type !== 'add'" class="q-pa-md">
         <q-input
           v-model="editingLabel"
           label="Nombre del paso"
@@ -110,7 +110,7 @@ function closeSidebar() {
 function onNodeClick({ node }) {
   if (node.type === 'add') {
     // modo Agregar
-    editingNode.value = null
+    editingNode.value = node
     sidebarOpen.value = true
   }
   else if (node.type === 'simple-step') {
@@ -123,31 +123,32 @@ function onNodeClick({ node }) {
 
 // Agregar un nuevo simple-step
 function addSimpleNode() {
-  const lastAdd = nodes.value.filter(n => n.type === 'add').pop()
-  if (!lastAdd) return
+  if (!editingNode.value) return
 
-  const y0 = lastAdd.position.y
+  const clickedY = editingNode.value.position.y
   const simpleId = `simple-${Date.now()}`
   const newAddId = `add-${Date.now()}`
 
-  // Mover 'Fin'
-  const endNode = nodes.value.find(n => n.id === 'end')
-  if (endNode) {
-    endNode.position = { x: centerX, y: y0 + 180 }
-  }
+  // Encontrar todos los nodos después del punto de inserción
+  const nodesAfter = nodes.value.filter(n => n.position.y > clickedY)
 
-  // Insertar paso y siguiente '+'
+  // Mover todos los nodos posteriores hacia abajo
+  nodesAfter.forEach(node => {
+    node.position.y += 120
+  })
+
+  // Insertar nuevo paso y botón add
   nodes.value.push(
     {
       id: simpleId,
       type: 'simple-step',
-      position: { x: 65, y: y0 + 60 },
+      position: { x: 65, y: clickedY + 60 },
       data: { label: 'Paso simple' }
     },
     {
       id: newAddId,
       type: 'add',
-      position: { x: 138, y: y0 + 120 }
+      position: { x: 138, y: clickedY + 120 }
     }
   )
 
