@@ -125,12 +125,12 @@ function rebuildEdges() {
     if (node.type === 'branch') {
       // Encontrar nodos hijos de la rama
       const leftNode = nodes.value.find(n => 
-        Math.abs(n.position.y - node.position.y - 80) < 10 && 
-        Math.abs(n.position.x - (node.position.x - 200)) < 10
+        Math.abs(n.position.y - node.position.y - 100) < 10 && 
+        Math.abs(n.position.x - (node.position.x - 150)) < 10
       )
       const rightNode = nodes.value.find(n => 
-        Math.abs(n.position.y - node.position.y - 80) < 10 && 
-        Math.abs(n.position.x - (node.position.x + 200)) < 10
+        Math.abs(n.position.y - node.position.y - 100) < 10 && 
+        Math.abs(n.position.x - (node.position.x + 150)) < 10
       )
 
       // Conectar rama con sus hijos
@@ -143,7 +143,26 @@ function rebuildEdges() {
           sourceHandle: 'left',
           targetHandle: 'top'
         })
+
+        // Encontrar el botón add para el nodo izquierdo
+        const leftAdd = nodes.value.find(n => 
+          n.type === 'add' &&
+          Math.abs(n.position.y - leftNode.position.y - 80) < 10 && 
+          Math.abs(n.position.x - leftNode.position.x + 73) < 10
+        )
+
+        if (leftAdd) {
+          edges.value.push({
+            id: `e-${leftNode.id}-${leftAdd.id}`,
+            source: leftNode.id,
+            target: leftAdd.id,
+            type: 'straight',
+            sourceHandle: 'bottom',
+            targetHandle: 'top'
+          })
+        }
       }
+
       if (rightNode) {
         edges.value.push({
           id: `e-${node.id}-${rightNode.id}`,
@@ -153,8 +172,26 @@ function rebuildEdges() {
           sourceHandle: 'right',
           targetHandle: 'top'
         })
+
+        // Encontrar el botón add para el nodo derecho
+        const rightAdd = nodes.value.find(n => 
+          n.type === 'add' &&
+          Math.abs(n.position.y - rightNode.position.y - 80) < 10 && 
+          Math.abs(n.position.x - rightNode.position.x + 73) < 10
+        )
+
+        if (rightAdd) {
+          edges.value.push({
+            id: `e-${rightNode.id}-${rightAdd.id}`,
+            source: rightNode.id,
+            target: rightAdd.id,
+            type: 'straight',
+            sourceHandle: 'bottom',
+            targetHandle: 'top'
+          })
+        }
       }
-    } else if (node.type !== 'end') {
+    } else if (node.type !== 'end' && node.type !== 'branch-child') {
       // Encontrar siguiente nodo en la misma columna
       const nextNode = nodes.value.find(n => 
         n.position.y > node.position.y && 
