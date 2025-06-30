@@ -41,7 +41,7 @@
           </q-item-section>
           <q-item-section>Bifurcación</q-item-section>
         </q-item>
-        <q-item clickable @click="addGotoNode">
+        <q-item  clickable @click="addGotoNode">
           <q-item-section avatar>
             <q-icon name="arrow_forward" color="blue" />
           </q-item-section>
@@ -95,12 +95,13 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref ,reactive } from "vue";
 import { VueFlow } from "@vue-flow/core";
 import NodeSimpleStep from "../NodeSimple/NodeSimpleStep.vue";
 import NodeBranch from "../NodeBranch/NodeBranch.vue";
 import NodeBranchChild from "../NodeBranch/NodeBranchChild.vue";
 import AddNode from "../AddNode/AddNode.vue";
+import GotoNode from '../GotoNode/GotoNode.vue';
 import {
   QDrawer,
   QToolbar,
@@ -113,6 +114,7 @@ import {
   QInput,
 } from "quasar";
 import { useVueFlow } from "@vue-flow/core";
+
 // Constantes y estado inicial
 const centerX = 250;
 const { updateNodeInternals } = useVueFlow();
@@ -141,6 +143,7 @@ const nodeTypes = {
   "simple-step": NodeSimpleStep,
   branch: NodeBranch,
   "branch-child": NodeBranchChild,
+  goto: GotoNode,
 };
 
 // Reconstruye las edges
@@ -148,6 +151,26 @@ function rebuildEdges() {
   edges.value = [];
 
   nodes.value.forEach((node) => {
+      if (node.type === 'add') {
+      // buscamos el goto justo debajo
+      const gotoChild = nodes.value.find(
+        (n) =>
+          n.type === 'goto' &&
+          n.position.x === node.position.x &&
+          Math.abs(n.position.y - node.position.y - 60) < 10
+      );
+      if (gotoChild) {
+        edges.value.push({
+          id: `e-${node.id}-${gotoChild.id}`,
+          source: node.id,
+          target: gotoChild.id,
+          type: 'straight',
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+        });
+      }
+      return; // salimos para no caer en el genérico
+    }
     if (node.type === "branch") {
       // Encontrar nodos hijos de la rama
       const leftNode = nodes.value.find(
@@ -299,6 +322,43 @@ function closeSidebar() {
 
 // Maneja clicks en nodos
 function onNodeClick({ node }) {
+// Si estamos en modo GoTo y clicamos UN PADRE
+  if (gotoState.currentId && gotoState.parentIds.includes(node.id)) {
+    // 1) Parar pulso en todos los padres
+    gotoState.parentIds.forEach(pid => {
+      const p = nodes.value.find(n => n.id === pid);
+      if (p) {
+        p.data.pulsing = false;
+        updateNodeInternals(pid);
+      }
+    });
+
+    // 2) Poner icono del padre en el goto
+    const gotoNode = nodes.value.find(n => n.id === gotoState.currentId);
+    if (gotoNode) {
+      gotoNode.data.icon = node.data.icon;
+      updateNodeInternals(gotoState.currentId);
+
+      // 3) Dibujar arista dashed animada goto→padre
+      edges.value.push({
+        id: `e-${gotoState.currentId}-${node.id}`,
+        source: gotoState.currentId,
+        target: node.id,
+        type: 'straight',
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        style: {
+          strokeDasharray: '6 6',
+          animation: 'dash 1s linear infinite'
+        }
+      });
+    }
+
+    // 4) Limpiar modo GoTo
+    gotoState.currentId = null;
+    gotoState.parentIds = [];
+    return;
+  }
   if (node.type === "add") {
     // modo Agregar
     editingNode.value = node;
@@ -442,6 +502,50 @@ function addBranchNode() {
   rebuildEdges();
   sidebarOpen.value = false;
 }
+
+const gotoState  = reactive({
+  currentId: null,
+  parentIds:[], 
+});
+
+function addGotoNode() {
+  if (!editingNode.value) return;
+
+  // 0) Detectamos los padres actuales del “+” ANTES de resetear edges
+  //    (son aquellos que apuntan al add que estamos clicando)
+  const parents = edges.value
+    .filter(e => e.target === editingNode.value.id)
+    .map(e => e.source);
+
+  // 1) Creamos el goto justo debajo del add
+  const { x, y } = editingNode.value.position;
+  const gotoId = `goto-${Date.now()}`;
+  nodes.value.push({
+    id: gotoId,
+    type: "goto",
+    position: { x, y: y + 60 },
+    data: { icon: null }
+  });
+
+  // 2) Reconstruimos TODAS las edges (incluye ahora add→goto)
+  rebuildEdges();
+
+  // 3) Guardamos el estado y lanzamos la animación SÓLO en esos padres
+  gotoState.currentId = gotoId;
+  gotoState.parentIds = parents;
+  parents.forEach(pid => {
+    const p = nodes.value.find(n => n.id === pid);
+    if (p) {
+      p.data.pulsing = true;
+      updateNodeInternals(pid);
+    }
+  });
+
+  sidebarOpen.value = false;
+}
+
+
+
 // Guardar edición de nombre
 function saveEdit() {
   if (editingNode.value) {

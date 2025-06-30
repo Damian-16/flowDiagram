@@ -1,5 +1,6 @@
 <template>
   <div class="node-branch">
+    <div v-if="data.pulsing" class="pulse-overlay" />
     <Handle
       type="target"
       position="top"
@@ -62,5 +63,20 @@ defineProps({
 .label {
   font-size: 14px;
   color: #666;
+}
+.pulse-overlay {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  border-radius: 50%;
+  background: rgba(33, 150, 243, 0.3);
+  animation: pulse 2s infinite;
+  pointer-events: none;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
 }
 </style>

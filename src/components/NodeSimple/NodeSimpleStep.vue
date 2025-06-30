@@ -1,6 +1,7 @@
 <!-- src/components/Nodes/NodeSimpleStep.vue -->
 <template>
   <div class="simple-step-node">
+    <div v-if="data.pulsing" class="pulse-overlay" /> 
     <Handle type="target" position="top" id="top" />
     <q-icon name="insert_drive_file" class="step-icon" />
     <span class="step-label">{{ data.label }}</span>
@@ -38,5 +39,20 @@ const props = defineProps(["data"]);
 .step-label {
   font-weight: 500;
   color: #333;
+}
+.pulse-overlay {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  border-radius: 50%;
+  background: rgba(33, 150, 243, 0.3);
+  animation: pulse 2s infinite;
+  pointer-events: none;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
 }
 </style>
