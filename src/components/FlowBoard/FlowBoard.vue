@@ -17,7 +17,7 @@
     <q-drawer
       v-model="sidebarOpen"
       side="right"
-      :width="300"
+      :width="460"
       :breakpoint="0"
       overlay
     >
@@ -44,9 +44,13 @@
           dense
           autofocus
         />
-        <div class="q-mt-md row justify-end">
-          <q-btn flat label="Cancelar" @click="closeSidebar" />
-          <q-btn color="primary" label="Guardar" @click="saveEdit" />
+        <div class="q-mt-md row justify-between">
+              <q-btn color="negative" icon="delete" label="Eliminar" @click="deleteNode" />
+            <q-btn flat label="Cancelar" @click="closeSidebar" class="q-mr-sm" />
+            <q-btn color="primary" label="Guardar" @click="saveEdit" />
+          <div>
+        
+          </div>
         </div>
       </div>
     </q-drawer>
@@ -165,6 +169,34 @@ function saveEdit() {
     // 2) le digo a VueFlow que re‐internalice este nodo
     updateNodeInternals(editingNode.value.id)
   }
+  closeSidebar()
+}
+
+// Eliminar nodo
+function deleteNode() {
+  if (!editingNode.value || editingNode.value.type === 'start' || editingNode.value.type === 'end') return
+
+  // Encontrar el nodo anterior y siguiente
+  const currentY = editingNode.value.position.y
+  const prevNode = nodes.value.find(n => 
+    n.position.y < currentY && 
+    Math.abs(n.position.x - editingNode.value.position.x) < 10
+  )
+  const nextNode = nodes.value.find(n => 
+    n.position.y > currentY && 
+    Math.abs(n.position.x - editingNode.value.position.x) < 10
+  )
+
+  // Eliminar el nodo actual
+  nodes.value = nodes.value.filter(n => n.id !== editingNode.value.id)
+
+  // Ajustar posiciones de los nodos siguientes
+  const nodesAfter = nodes.value.filter(n => n.position.y > currentY)
+  nodesAfter.forEach(node => {
+    node.position.y -= 120
+  })
+
+  rebuildEdges()
   closeSidebar()
 }
 </script>
