@@ -8,7 +8,7 @@
       :nodes-connectable="false"
       :elements-selectable="false"
       :zoom-on-scroll="true"
-      :pan-on-drag="true"
+      :pan-on-drag="false"
       class="flow-bg"
       fit-view
       @node-click="onNodeClick"
