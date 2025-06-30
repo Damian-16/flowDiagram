@@ -90,6 +90,7 @@ import { ref } from 'vue'
 import { VueFlow } from '@vue-flow/core'
 import NodeSimpleStep from '../NodeSimple/NodeSimpleStep.vue'
 import NodeBranch from '../NodeBranch/NodeBranch.vue'
+import NodeBranchChild from '../NodeBranch/NodeBranchChild.vue'
 import AddNode from '../AddNode/AddNode.vue'
 import {
   QDrawer, QToolbar, QToolbarTitle,
@@ -112,7 +113,8 @@ const edges = ref([])
 const nodeTypes = {
   add: AddNode,
   'simple-step': NodeSimpleStep,
-  branch: NodeBranch
+  branch: NodeBranch,
+  'branch-child': NodeBranchChild
 }
 
 // Reconstruye las edges
@@ -287,13 +289,13 @@ function addBranchNode() {
     },
     {
       id: leftId,
-      type: 'simple-step',
+      type: 'branch-child',
       position: { x: centerX - 100, y: clickedY + 160 },
       data: { label: 'Nombre de rama' }
     },
     {
       id: rightId,
-      type: 'simple-step',
+      type: 'branch-child',
       position: { x: centerX + 200, y: clickedY + 160 },
       data: { label: 'Nombre de rama' }
     },
