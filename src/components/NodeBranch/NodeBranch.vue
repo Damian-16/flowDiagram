@@ -47,6 +47,10 @@ defineProps({
   justify-content: center;
   position: relative;
   min-width: 150px;
+  &:hover {
+    background: #fff9e6;
+    transform: scale(1.05);
+  }
 }
 
 .content {

@@ -9,9 +9,9 @@
 </template>
 
 <script setup>
-import { Handle } from '@vue-flow/core'
+import { Handle } from "@vue-flow/core";
 
-const props = defineProps(['data'])
+const props = defineProps(["data"]);
 </script>
 
 <style scoped>
@@ -26,7 +26,17 @@ const props = defineProps(['data'])
   min-width: 180px;
   gap: 10px;
   position: relative;
+  &:hover {
+    background: #f5fcf2;
+    transform: scale(1.05);
+  }
 }
-.step-icon { color: #a0d468; font-size: 24px }
-.step-label { font-weight: 500; color: #333 }
+.step-icon {
+  color: #a0d468;
+  font-size: 24px;
+}
+.step-label {
+  font-weight: 500;
+  color: #333;
+}
 </style>

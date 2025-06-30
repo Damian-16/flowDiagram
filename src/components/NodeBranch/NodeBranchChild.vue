@@ -1,10 +1,6 @@
 <template>
   <div class="node-branch-child">
-    <Handle
-      type="target"
-      position="top"
-      :style="{ top: '0px', opacity: 1 }"
-    />
+    <Handle type="target" position="top" :style="{ top: '0px', opacity: 1 }" />
     <div class="content">
       <div class="label">{{ data.label }}</div>
     </div>
@@ -17,14 +13,14 @@
 </template>
 
 <script setup>
-import { Handle } from '@vue-flow/core'
+import { Handle } from "@vue-flow/core";
 
 defineProps({
   data: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 </script>
 
 <style scoped>
@@ -38,6 +34,10 @@ defineProps({
   justify-content: center;
   position: relative;
   min-width: 150px;
+  &:hover {
+    background: #fff9e6;
+    transform: scale(1.05);
+  }
 }
 
 .content {
