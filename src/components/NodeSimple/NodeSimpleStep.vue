@@ -3,13 +3,15 @@
   <div class="simple-step-node">
     <Handle type="target" position="top" id="top" />
     <q-icon name="insert_drive_file" class="step-icon" />
-    <span class="step-label">Paso simple</span>
+    <span class="step-label">{{ data.label }}</span>
     <Handle type="source" position="bottom" id="bottom" />
   </div>
 </template>
 
 <script setup>
 import { Handle } from '@vue-flow/core'
+
+const props = defineProps(['data'])
 </script>
 
 <style scoped>

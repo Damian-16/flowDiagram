@@ -22,10 +22,13 @@
       overlay
     >
       <q-toolbar>
-        <q-toolbar-title>Agregar Nodo</q-toolbar-title>
-        <q-btn flat round icon="close" @click="sidebarOpen = false" />
+        <q-toolbar-title>
+          {{ editingNode ? 'Editar Paso' : 'Agregar Nodo' }}
+        </q-toolbar-title>
+        <q-btn flat round icon="close" @click="closeSidebar" />
       </q-toolbar>
-      <q-list>
+
+      <q-list v-if="!editingNode">
         <q-item clickable @click="addSimpleNode">
           <q-item-section avatar>
             <q-icon name="insert_drive_file" color="green" />
@@ -33,6 +36,19 @@
           <q-item-section>Paso simple</q-item-section>
         </q-item>
       </q-list>
+
+      <div v-else class="q-pa-md">
+        <q-input
+          v-model="editingLabel"
+          label="Nombre del paso"
+          dense
+          autofocus
+        />
+        <div class="q-mt-md row justify-end">
+          <q-btn flat label="Cancelar" @click="closeSidebar" />
+          <q-btn color="primary" label="Guardar" @click="saveEdit" />
+        </div>
+      </div>
     </q-drawer>
   </div>
 </template>
@@ -45,51 +61,68 @@ import AddNode         from '../AddNode/AddNode.vue'
 import {
   QDrawer, QToolbar, QToolbarTitle,
   QList, QItem, QItemSection,
-  QBtn, QIcon
+  QBtn, QIcon, QInput
 } from 'quasar'
-
-// X común para centrar todos los nodos
+import { useVueFlow } from '@vue-flow/core'
+// Constantes y estado inicial
 const centerX = 80
+const { updateNodeInternals } = useVueFlow()
 
 const nodes = ref([
-  { id: 'start',    type: 'start',       position: { x: centerX, y:   0 }, data: { label: 'Inicio' } },
-  { id: 'add-0',    type: 'add',         position: { x: 138, y:  80 } },
-  { id: 'end',      type: 'end',         position: { x: centerX, y: 160 }, data: { label: 'Fin' } },
+  { id: 'start', type: 'start', position: { x: centerX, y: 0 }, data: { label: 'Inicio' } },
+  { id: 'add-0', type: 'add', position: { x: 138, y: 80 } },
+  { id: 'end',   type: 'end', position: { x: centerX, y: 160 }, data: { label: 'Fin' } },
 ])
 
 const edges = ref([])
 
 const nodeTypes = {
-  add:          AddNode,
+  add: AddNode,
   'simple-step': NodeSimpleStep,
 }
 
-// reconstruye todas las conexiones en orden vertical
+// Reconstruye las edges
 function rebuildEdges() {
   const ordered = [...nodes.value].sort((a,b)=> a.position.y - b.position.y)
   edges.value = ordered.slice(0, -1).map((src, i) => ({
-    id:     `e-${src.id}-${ordered[i+1].id}`,
+    id: `e-${src.id}-${ordered[i+1].id}`,
     source: src.id,
     target: ordered[i+1].id,
-    type:   'straight',
+    type: 'straight',
     sourceHandle: 'bottom',
     targetHandle: 'top'
   }))
 }
-
-// llamada inicial
 rebuildEdges()
 
-const sidebarOpen = ref(false)
+// Sidebar
+const sidebarOpen   = ref(false)
+const editingNode   = ref(null)      // nodo que estamos editando
+const editingLabel  = ref('')        // etiqueta del input
 
+function closeSidebar() {
+  sidebarOpen.value = false
+  editingNode.value = null
+  editingLabel.value = ''
+}
+
+// Maneja clicks en nodos
 function onNodeClick({ node }) {
-  if (node?.type === 'add') {
+  if (node.type === 'add') {
+    // modo Agregar
+    editingNode.value = null
+    sidebarOpen.value = true
+  }
+  else if (node.type === 'simple-step') {
+    // modo Editar
+    editingNode.value = node
+    editingLabel.value = node.data.label || ''
     sidebarOpen.value = true
   }
 }
 
+// Agregar un nuevo simple-step
 function addSimpleNode() {
-  // 1) localiza el último '+'
   const lastAdd = nodes.value.filter(n => n.type === 'add').pop()
   if (!lastAdd) return
 
@@ -97,19 +130,19 @@ function addSimpleNode() {
   const simpleId = `simple-${Date.now()}`
   const newAddId = `add-${Date.now()}`
 
-  // 2) baja 'Fin' un nivel
+  // Mover 'Fin'
   const endNode = nodes.value.find(n => n.id === 'end')
   if (endNode) {
     endNode.position = { x: centerX, y: y0 + 180 }
   }
 
-  // 3) inserta el nuevo paso y un '+' debajo (sin eliminar el '+' anterior)
+  // Insertar paso y siguiente '+'
   nodes.value.push(
     {
       id: simpleId,
       type: 'simple-step',
-      position: { x: 65, y: y0 +  60 },
-      data: {}
+      position: { x: 65, y: y0 + 60 },
+      data: { label: 'Paso simple' }
     },
     {
       id: newAddId,
@@ -118,16 +151,26 @@ function addSimpleNode() {
     }
   )
 
-  // 4) vuelve a generar las edges
   rebuildEdges()
   sidebarOpen.value = false
+}
+
+// Guardar edición de nombre
+function saveEdit() {
+  if (editingNode.value) {
+    // 1) actualizo la etiqueta
+    editingNode.value.data.label = editingLabel.value
+
+    // 2) le digo a VueFlow que re‐internalice este nodo
+    updateNodeInternals(editingNode.value.id)
+  }
+  closeSidebar()
 }
 </script>
 
 <style scoped lang="scss">
 .flow-board {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
 }
 .flow-bg {
   background-color: #f4f4f4;
