@@ -41,6 +41,12 @@
           </q-item-section>
           <q-item-section>Bifurcación</q-item-section>
         </q-item>
+        <q-item clickable @click="addGotoNode">
+          <q-item-section avatar>
+            <q-icon name="arrow_forward" color="blue" />
+          </q-item-section>
+          <q-item-section>Ir a</q-item-section>
+        </q-item>
       </q-list>
 
       <div v-if="editingNode && editingNode.type !== 'add'" class="q-pa-md">
