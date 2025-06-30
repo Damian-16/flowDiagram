@@ -330,30 +330,29 @@ function addSimpleNode() {
   if (!editingNode.value) return;
 
   const clickedY = editingNode.value.position.y;
+  const parentX = editingNode.value.position.x -73;  // 🔥 la X del "+" que abriste
+
+  // 1) Bajamos todos los nodos que vienen después
+  nodes.value
+    .filter(n => n.position.y > clickedY)
+    .forEach(n => n.position.y += 120);
+
+  // 2) Generamos IDs
   const simpleId = `simple-${Date.now()}`;
   const newAddId = `add-${Date.now()}`;
 
-  // Encontrar todos los nodos después del punto de inserción
-  const nodesAfter = nodes.value.filter((n) => n.position.y > clickedY);
-
-  // Mover todos los nodos posteriores hacia abajo
-  nodesAfter.forEach((node) => {
-    node.position.y += 120;
-  });
-
-  // Insertar nuevo paso y botón add
-  const parentX = editingNode.value.position.x;
+  // 3) Insertamos el paso y el siguiente "+"
   nodes.value.push(
     {
       id: simpleId,
       type: "simple-step",
-      position: { x: 235, y: clickedY + 60 },
+      position: { x: parentX,     y: clickedY + 60 },
       data: { label: "Paso simple" },
     },
     {
       id: newAddId,
       type: "add",
-      position: { x: parentX, y: clickedY + 120 },
+      position: { x: parentX + 73,     y: clickedY + 120 }, 
     }
   );
 
@@ -361,13 +360,14 @@ function addSimpleNode() {
   sidebarOpen.value = false;
 }
 
+
 // Agregar un nuevo nodo rama
 
 function addBranchNode() {
   if (!editingNode.value) return;
 
   const clickedY = editingNode.value.position.y;
-
+  nodes.value = nodes.value.filter(n => n.type !== 'end');
   // 1) ¿Hay ya alguna bifurcación en el canvas?
   const hasBranch = nodes.value.some(n => n.type === "branch");
 
