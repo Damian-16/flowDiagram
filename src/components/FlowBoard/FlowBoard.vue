@@ -766,11 +766,11 @@ function deleteNode() {
   <div class="flow-board">
     <!-- 1) Lienzo -->
     <FlowCanvas
-      :nodes="nodes"
-      :edges="edges"
-      :node-types="nodeTypes"
-      @node-click="onNodeClick"
-    />
+  :nodes="nodes"
+  :edges="edges"
+  :node-types="nodeTypes"
+  @node-click="onNodeClick"
+/>
 
     <!-- 2) Sidebar -->
    <Sidebar
