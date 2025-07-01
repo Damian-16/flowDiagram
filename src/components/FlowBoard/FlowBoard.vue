@@ -95,9 +95,12 @@
 </template>
 
 <script setup>
-import { ref ,reactive } from "vue";
-import { VueFlow } from "@vue-flow/core";
+import { ref, reactive, computed } from "vue";
+import { VueFlow, useVueFlow } from "@vue-flow/core";
 import NodeSimpleStep from "../NodeSimple/NodeSimpleStep.vue";
+import NodeGoto from "../NodeGoto/NodeGoto.vue";
+
+
 import NodeBranch from "../NodeBranch/NodeBranch.vue";
 import NodeBranchChild from "../NodeBranch/NodeBranchChild.vue";
 import AddNode from "../AddNode/AddNode.vue";
@@ -113,7 +116,7 @@ import {
   QIcon,
   QInput,
 } from "quasar";
-import { useVueFlow } from "@vue-flow/core";
+
 
 // Constantes y estado inicial
 const centerX = 250;
@@ -143,8 +146,24 @@ const nodeTypes = {
   "simple-step": NodeSimpleStep,
   branch: NodeBranch,
   "branch-child": NodeBranchChild,
-  goto: GotoNode,
+  goto: NodeGoto,
 };
+
+// Estado del modo goto
+const gotoMode = reactive({
+  active: false,
+  sourceNodeId: null,
+  availableTargets: [],
+});
+
+// Computed para nodos disponibles como objetivo
+const availableTargetNodes = computed(() => {
+  if (!gotoMode.active) return [];
+  return nodes.value.filter(node => 
+    ['simple-step', 'branch'].includes(node.type) && 
+    node.position.y < gotoMode.sourceY
+  );
+});
 
 // Reconstruye las edges
 function rebuildEdges() {
@@ -511,34 +530,26 @@ const gotoState  = reactive({
 function addGotoNode() {
   if (!editingNode.value) return;
 
-  // 0) Detectamos los padres actuales del “+” ANTES de resetear edges
-  //    (son aquellos que apuntan al add que estamos clicando)
-  const parents = edges.value
-    .filter(e => e.target === editingNode.value.id)
-    .map(e => e.source);
-
-  // 1) Creamos el goto justo debajo del add
   const { x, y } = editingNode.value.position;
   const gotoId = `goto-${Date.now()}`;
+
+  // Crear nodo goto
   nodes.value.push({
     id: gotoId,
-    type: "goto",
+    type: 'goto',
     position: { x, y: y + 60 },
     data: { icon: null }
   });
 
-  // 2) Reconstruimos TODAS las edges (incluye ahora add→goto)
-  rebuildEdges();
+  // Activar modo goto
+  gotoMode.active = true;
+  gotoMode.sourceNodeId = gotoId;
+  gotoMode.sourceY = y + 60;
 
-  // 3) Guardamos el estado y lanzamos la animación SÓLO en esos padres
-  gotoState.currentId = gotoId;
-  gotoState.parentIds = parents;
-  parents.forEach(pid => {
-    const p = nodes.value.find(n => n.id === pid);
-    if (p) {
-      p.data.pulsing = true;
-      updateNodeInternals(pid);
-    }
+  // Activar pulsación en nodos objetivo disponibles
+  availableTargetNodes.value.forEach(node => {
+    node.data.pulsing = true;
+    updateNodeInternals(node.id);
   });
 
   sidebarOpen.value = false;
@@ -699,5 +710,14 @@ function deleteNode() {
   background-color: #f4f4f4;
   background-image: radial-gradient(#bbb 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 </style>

@@ -1,8 +1,7 @@
 <template>
   <div class="node-goto">
     <div class="node-goto__content">
-      <q-icon name="arrow_forward" color="blue" size="sm" />
-      <span class="node-goto__label">{{ data.label }}</span>
+      <q-icon :name="data.icon || 'arrow_forward'" color="blue" size="sm" />
     </div>
     <div class="node-goto__handles">
       <Handle type="target" position="top" />
@@ -26,10 +25,9 @@ defineProps({
 .node-goto {
   background: white;
   border: 2px solid #2196f3;
-  border-radius: 8px;
-  padding: 8px 16px;
-  min-width: 150px;
-  font-size: 14px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   position: relative;
 }
 
