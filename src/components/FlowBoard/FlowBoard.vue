@@ -342,26 +342,23 @@ function closeSidebar() {
 // Maneja clicks en nodos
 function onNodeClick({ node }) {
 // Si estamos en modo GoTo y clicamos UN PADRE
-  if (gotoState.currentId && gotoState.parentIds.includes(node.id)) {
-    // 1) Parar pulso en todos los padres
-    gotoState.parentIds.forEach(pid => {
-      const p = nodes.value.find(n => n.id === pid);
-      if (p) {
-        p.data.pulsing = false;
-        updateNodeInternals(pid);
-      }
+  if (gotoMode.active && availableTargetNodes.value.includes(node)) {
+    // 1) Parar pulso en todos los nodos objetivo
+    availableTargetNodes.value.forEach(targetNode => {
+      targetNode.data.pulsing = false;
+      updateNodeInternals(targetNode.id);
     });
 
-    // 2) Poner icono del padre en el goto
-    const gotoNode = nodes.value.find(n => n.id === gotoState.currentId);
+    // 2) Poner icono del nodo clickeado en el goto
+    const gotoNode = nodes.value.find(n => n.id === gotoMode.sourceNodeId);
     if (gotoNode) {
       gotoNode.data.icon = node.data.icon;
-      updateNodeInternals(gotoState.currentId);
+      updateNodeInternals(gotoMode.sourceNodeId);
 
-      // 3) Dibujar arista dashed animada goto→padre
+      // 3) Dibujar arista dashed animada goto→nodo clickeado
       edges.value.push({
-        id: `e-${gotoState.currentId}-${node.id}`,
-        source: gotoState.currentId,
+        id: `e-${gotoMode.sourceNodeId}-${node.id}`,
+        source: gotoMode.sourceNodeId,
         target: node.id,
         type: 'straight',
         sourceHandle: 'bottom',
@@ -374,8 +371,9 @@ function onNodeClick({ node }) {
     }
 
     // 4) Limpiar modo GoTo
-    gotoState.currentId = null;
-    gotoState.parentIds = [];
+    gotoMode.active = false;
+    gotoMode.sourceNodeId = null;
+    gotoMode.sourceY = null;
     return;
   }
   if (node.type === "add") {
