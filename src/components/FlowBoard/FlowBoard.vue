@@ -53,9 +53,13 @@
         </q-item>
         <q-item clickable @click="addGotoNode">
           <q-item-section avatar>
-            <q-icon name="route" style="--icon-bg: #b39ddb33" class="node-icon" />
+            <q-icon
+              name="route"
+              style="--icon-bg: #b39ddb33"
+              class="node-icon"
+            />
           </q-item-section>
-          <q-item-section>Ir a</q-item-section>
+          <q-item-section>Paso ir a</q-item-section>
         </q-item>
       </q-list>
 
@@ -130,7 +134,7 @@ import {
 } from "quasar";
 
 // Constantes y estado inicial
-const centerX = 250;
+const centerX = 550;
 const { updateNodeInternals } = useVueFlow();
 const lastEndPosition = ref(null);
 
@@ -138,14 +142,14 @@ const nodes = ref([
   {
     id: "start",
     type: "start",
-    position: { x: centerX, y: 0 },
+    position: { x: centerX, y: 100 },
     data: { label: "Inicio" },
   },
-  { id: "add-0", type: "add", position: { x: centerX + 58, y: 80 } },
+  { id: "add-0", type: "add", position: { x: centerX + 58, y: 180 } },
   {
     id: "end",
     type: "end",
-    position: { x: centerX, y: 160 },
+    position: { x: centerX, y: 260 },
     data: { label: "Fin" },
   },
 ]);
