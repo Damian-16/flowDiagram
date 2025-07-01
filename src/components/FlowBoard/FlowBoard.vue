@@ -116,10 +116,10 @@
 import { ref, reactive, computed } from "vue";
 import { VueFlow, useVueFlow } from "@vue-flow/core";
 import AddNode from "../AddNode/AddNode.vue";
-import NodeSimpleStep from "../NodeSimple/NodeSimpleStep.vue";
-import NodeBranch from "../NodeBranch/NodeBranch.vue";
-import NodeBranchChild from "../NodeBranch/NodeBranchChild.vue";
-import NodeGoto from "../NodeGoto/NodeGoto.vue";
+import NodeSimpleStep from "../Nodes/NodeSimple/NodeSimpleStep.vue";
+import NodeBranch from "../Nodes/NodeBranch/NodeBranch.vue";
+import NodeBranchChild from "../Nodes/NodeBranch/NodeBranchChild.vue";
+import NodeGoto from "../Nodes/NodeGoto/NodeGoto.vue";
 
 import {
   QDrawer,
