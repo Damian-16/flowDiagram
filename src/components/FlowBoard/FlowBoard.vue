@@ -39,7 +39,7 @@
           <q-item-section avatar>
             <q-icon name="call_split" color="orange" />
           </q-item-section>
-          <q-item-section>Bifurcación</q-item-section>
+          <q-item-section>Paso rama</q-item-section>
         </q-item>
         <q-item  clickable @click="addGotoNode">
           <q-item-section avatar>
@@ -490,7 +490,7 @@ function addBranchNode() {
       id: branchId,
       type: "branch",
       position: { x: parentX,       y: clickedY + 60 },
-      data: { label: "Bifurcación" },
+      data: { label: "Paso rama" },
     },
     {
       id: leftId,
