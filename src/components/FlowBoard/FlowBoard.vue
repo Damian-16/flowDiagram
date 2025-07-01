@@ -57,17 +57,21 @@
             dense
             autofocus
             class="q-mb-sm"
+             outlined  
+             
           />
           <q-input
             v-model="branchLeftLabel"
             label="Nombre rama izquierda"
             dense
             class="q-mb-sm"
+             outlined  
           />
           <q-input
             v-model="branchRightLabel"
             label="Nombre rama derecha"
             dense
+             outlined  
           />
         </template>
         <template v-else>
@@ -76,6 +80,7 @@
             label="Nombre del paso"
             dense
             autofocus
+             outlined  
           />
         </template>
         <div class="q-mt-md row justify-between">
