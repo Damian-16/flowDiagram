@@ -1,7 +1,7 @@
 <template>
   <div class="node-goto">
     <div class="node-goto__content">
-      <q-icon :name="data.icon || 'arrow_forward'" color="blue" size="sm" />
+      <q-icon :name="data.icon || 'arrow_forward'" :color="data.icon === 'insert_drive_file' ? 'green' : data.icon === 'call_split' ? 'orange' : 'blue'" size="sm" />
     </div>
     <div class="node-goto__handles">
       <Handle type="target" position="top" />
@@ -24,17 +24,31 @@ defineProps({
 <style scoped>
 .node-goto {
   background: white;
-  border: 2px solid #2196f3;
+  border: 2px dashed #2196f3;
   border-radius: 50%;
   width: 40px;
   height: 40px;
   position: relative;
+  animation: nodeDash 0.75s linear infinite;
+}
+
+@keyframes nodeDash {
+  from {
+    border-color: rgba(33, 150, 243, 1);
+  }
+  50% {
+    border-color: rgba(33, 150, 243, 0.5);
+  }
+  to {
+    border-color: rgba(33, 150, 243, 1);
+  }
 }
 
 .node-goto__content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  height: 100%;
 }
 
 .node-goto__label {

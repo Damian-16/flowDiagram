@@ -352,7 +352,12 @@ function onNodeClick({ node }) {
     // 2) Poner icono del nodo clickeado en el goto
     const gotoNode = nodes.value.find(n => n.id === gotoMode.sourceNodeId);
     if (gotoNode) {
-      gotoNode.data.icon = node.data.icon;
+      // Asignar el ícono del nodo clickeado
+      if (node.type === 'simple-step') {
+        gotoNode.data.icon = 'insert_drive_file';
+      } else if (node.type === 'branch') {
+        gotoNode.data.icon = 'call_split';
+      }
       updateNodeInternals(gotoMode.sourceNodeId);
 
       // 3) Dibujar arista dashed animada goto→nodo clickeado
@@ -364,8 +369,10 @@ function onNodeClick({ node }) {
         sourceHandle: 'bottom',
         targetHandle: 'top',
         style: {
-          strokeDasharray: '6 6',
-          animation: 'dash 1s linear infinite'
+          strokeWidth: 2,
+          stroke: '#2196f3',
+          strokeDasharray: '10 10',
+          animation: 'flowDash 0.5s linear infinite'
         }
       });
     }
@@ -716,6 +723,12 @@ function deleteNode() {
   }
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+@keyframes flowDash {
+  to {
+    stroke-dashoffset: -20;
   }
 }
 </style>
