@@ -1,4 +1,4 @@
-// src/composables/useFlowBoard.ts
+
 import { ref, reactive, computed, Ref } from 'vue';
 import { useVueFlow } from '@vue-flow/core';
 import type { Node as FlowNode, Edge as FlowEdge } from '@vue-flow/core';
@@ -18,7 +18,7 @@ interface GoToMode {
 export function useFlowBoard() {
   // Constantes y estado inicial
   const centerX = 550;
-  const { updateNodeInternals } = useVueFlow();
+  const { updateNodeInternals }: any = useVueFlow();
   const lastEndPosition = ref<{ x: number; y: number } | null>(null);
 
   // Nodos y aristas
@@ -220,6 +220,7 @@ function onNodeClick({ node }) {
 }
  // Agregar un nuevo simple-step
 function addSimpleNode() {
+  console.log('🔥 useFlowBoard.addSimpleNode() disparada');
   if (!editingNode.value) return;
 
   const clickedY = editingNode.value.position.y;
