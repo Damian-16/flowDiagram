@@ -96,15 +96,15 @@
             outlined
           />
         </template>
-        <div class="q-mt-md row justify-between">
+        <div class="q-mt-md row justify-end">
           <q-btn
             color="negative"
-            icon="delete"
+            flat
             label="Eliminar"
             @click="deleteNode"
           />
           <q-btn flat label="Cancelar" @click="closeSidebar" class="q-mr-sm" />
-          <q-btn color="primary" label="Guardar" @click="saveEdit" />
+          <q-btn color="primary" label="Confirmar" @click="saveEdit" />
           <div></div>
         </div>
       </div>
