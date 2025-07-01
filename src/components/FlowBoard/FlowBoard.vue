@@ -23,7 +23,7 @@
     >
       <q-toolbar>
         <q-toolbar-title>
-          {{ editingNode ? "Editar Paso" : "Agregar Nodo" }}
+          {{  editingNode?.type === 'branch' ? "Paso Branch":editingNode?.type === 'simple-step' ? "Paso simple": "Agregar Paso" }}
         </q-toolbar-title>
         <q-btn flat round icon="close" @click="closeSidebar" />
       </q-toolbar>
@@ -67,7 +67,7 @@
         <template v-if="editingNode.type === 'branch'">
           <q-input
             v-model="editingLabel"
-            label="Nombre de la bifurcación"
+            label="Nombre de el paso branch"
             dense
             autofocus
             class="q-mb-sm"
