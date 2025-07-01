@@ -1,9 +1,13 @@
 <!-- src/components/Nodes/NodeSimpleStep.vue -->
 <template>
-  <div class="simple-step-node"  :class="{ 'pulse-animation': data.pulsing }">
-    
+  <div class="simple-step-node" :class="{ 'pulse-animation': data.pulsing }">
     <Handle type="target" position="top" id="top" />
-    <q-icon name="insert_drive_file" class="step-icon" />
+    <q-icon
+      class="node-icon"
+      style="--icon-bg: #90ee9033"
+      name="description"
+      color="green"
+    />
     <span class="step-label">{{ data.label }}</span>
     <Handle type="source" position="bottom" id="bottom" />
   </div>
@@ -39,6 +43,15 @@ const props = defineProps(["data", "id"]);
 .step-label {
   font-weight: 500;
   color: #333;
+}
+.node-icon {
+  border-radius: 8px;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-color, #333);
+  background-color: var(--icon-bg, transparent);
 }
 .pulse-animation {
   animation: pulse 1.5s ease-in-out infinite;

@@ -31,19 +31,29 @@
       <q-list v-if="editingNode?.type === 'add'">
         <q-item clickable @click="addSimpleNode">
           <q-item-section avatar>
-            <q-icon name="insert_drive_file" color="green" />
+            <q-icon
+              class="node-icon"
+              style="--icon-bg: #90ee9033"
+              name="description"
+              color="green"
+            />
           </q-item-section>
           <q-item-section>Paso simple</q-item-section>
         </q-item>
         <q-item clickable @click="addBranchNode">
           <q-item-section avatar>
-            <q-icon name="call_split" color="orange" />
+            <q-icon
+              class="node-icon"
+              style="--icon-bg: #ffcc8033"
+              name="device_hub"
+              color="orange"
+            />
           </q-item-section>
           <q-item-section>Paso rama</q-item-section>
         </q-item>
-        <q-item  clickable @click="addGotoNode">
+        <q-item clickable @click="addGotoNode">
           <q-item-section avatar>
-            <q-icon name="arrow_forward" color="blue" />
+            <q-icon name="route" style="--icon-bg: #b39ddb33" class="node-icon" />
           </q-item-section>
           <q-item-section>Ir a</q-item-section>
         </q-item>
@@ -57,21 +67,20 @@
             dense
             autofocus
             class="q-mb-sm"
-             outlined  
-             
+            outlined
           />
           <q-input
             v-model="branchLeftLabel"
             label="Nombre rama izquierda"
             dense
             class="q-mb-sm"
-             outlined  
+            outlined
           />
           <q-input
             v-model="branchRightLabel"
             label="Nombre rama derecha"
             dense
-             outlined  
+            outlined
           />
         </template>
         <template v-else>
@@ -80,7 +89,7 @@
             label="Nombre del paso"
             dense
             autofocus
-             outlined  
+            outlined
           />
         </template>
         <div class="q-mt-md row justify-between">
@@ -119,7 +128,6 @@ import {
   QIcon,
   QInput,
 } from "quasar";
-
 
 // Constantes y estado inicial
 const centerX = 250;
@@ -162,9 +170,10 @@ const gotoMode = reactive({
 // Computed para nodos disponibles como objetivo
 const availableTargetNodes = computed(() => {
   if (!gotoMode.active) return [];
-  return nodes.value.filter(node => 
-    ['simple-step', 'branch'].includes(node.type) && 
-    node.position.y < gotoMode.sourceY
+  return nodes.value.filter(
+    (node) =>
+      ["simple-step", "branch"].includes(node.type) &&
+      node.position.y < gotoMode.sourceY
   );
 });
 
@@ -173,11 +182,11 @@ function rebuildEdges() {
   edges.value = [];
 
   nodes.value.forEach((node) => {
-      if (node.type === 'add') {
+    if (node.type === "add") {
       // buscamos el goto justo debajo
       const gotoChild = nodes.value.find(
         (n) =>
-          n.type === 'goto' &&
+          n.type === "goto" &&
           n.position.x === node.position.x &&
           Math.abs(n.position.y - node.position.y - 60) < 10
       );
@@ -186,9 +195,9 @@ function rebuildEdges() {
           id: `e-${node.id}-${gotoChild.id}`,
           source: node.id,
           target: gotoChild.id,
-          type: 'straight',
-          sourceHandle: 'bottom',
-          targetHandle: 'top',
+          type: "straight",
+          sourceHandle: "bottom",
+          targetHandle: "top",
         });
       }
       return; // salimos para no caer en el genérico
@@ -304,12 +313,11 @@ function rebuildEdges() {
           }
         }
       }
-    } else if (node.type !== "end" ) {
+    } else if (node.type !== "end") {
       // Encontrar siguiente nodo en la misma columna
       const nextNode = nodes.value.find(
         (n) =>
-          n.position.y > node.position.y &&
-          n.position.x === node.position.x
+          n.position.y > node.position.y && n.position.x === node.position.x
       );
 
       if (nextNode) {
@@ -344,22 +352,22 @@ function closeSidebar() {
 
 // Maneja clicks en nodos
 function onNodeClick({ node }) {
-// Si estamos en modo GoTo y clicamos UN PADRE
+  // Si estamos en modo GoTo y clicamos UN PADRE
   if (gotoMode.active && availableTargetNodes.value.includes(node)) {
     // 1) Parar pulso en todos los nodos objetivo
-    availableTargetNodes.value.forEach(targetNode => {
+    availableTargetNodes.value.forEach((targetNode) => {
       targetNode.data.pulsing = false;
       updateNodeInternals(targetNode.id);
     });
 
     // 2) Poner icono del nodo clickeado en el goto
-    const gotoNode = nodes.value.find(n => n.id === gotoMode.sourceNodeId);
+    const gotoNode = nodes.value.find((n) => n.id === gotoMode.sourceNodeId);
     if (gotoNode) {
       // Asignar el ícono del nodo clickeado
-      if (node.type === 'simple-step') {
-        gotoNode.data.icon = 'insert_drive_file';
-      } else if (node.type === 'branch') {
-        gotoNode.data.icon = 'call_split';
+      if (node.type === "simple-step") {
+        gotoNode.data.icon = "description";
+      } else if (node.type === "branch") {
+        gotoNode.data.icon = "device_hub";
       }
       updateNodeInternals(gotoMode.sourceNodeId);
 
@@ -368,15 +376,15 @@ function onNodeClick({ node }) {
         id: `e-${gotoMode.sourceNodeId}-${node.id}`,
         source: gotoMode.sourceNodeId,
         target: node.id,
-        type: 'straight',
-        sourceHandle: 'bottom',
-        targetHandle: 'top',
+        type: "straight",
+        sourceHandle: "bottom",
+        targetHandle: "top",
         style: {
           strokeWidth: 2,
-          stroke: '#2196f3',
-          strokeDasharray: '10 10',
-          animation: 'flowDash 0.5s linear infinite'
-        }
+          stroke: "#2196f3",
+          strokeDasharray: "10 10",
+          animation: "flowDash 0.5s linear infinite",
+        },
       });
     }
 
@@ -423,12 +431,12 @@ function addSimpleNode() {
   if (!editingNode.value) return;
 
   const clickedY = editingNode.value.position.y;
-  const parentX = editingNode.value.position.x -73;  // 🔥 la X del "+" que abriste
+  const parentX = editingNode.value.position.x - 73; // 🔥 la X del "+" que abriste
 
   // 1) Bajamos todos los nodos que vienen después
   nodes.value
-    .filter(n => n.position.y > clickedY)
-    .forEach(n => n.position.y += 120);
+    .filter((n) => n.position.y > clickedY)
+    .forEach((n) => (n.position.y += 120));
 
   // 2) Generamos IDs
   const simpleId = `simple-${Date.now()}`;
@@ -439,13 +447,13 @@ function addSimpleNode() {
     {
       id: simpleId,
       type: "simple-step",
-      position: { x: parentX,y: clickedY + 60 },
+      position: { x: parentX, y: clickedY + 60 },
       data: { label: "Paso simple" },
     },
     {
       id: newAddId,
       type: "add",
-      position: { x: parentX + 73, y: clickedY + 120 }, 
+      position: { x: parentX + 73, y: clickedY + 120 },
     }
   );
 
@@ -453,41 +461,38 @@ function addSimpleNode() {
   sidebarOpen.value = false;
 }
 
-
 // Agregar un nuevo nodo rama
 
 function addBranchNode() {
   if (!editingNode.value) return;
 
   const clickedY = editingNode.value.position.y;
-  nodes.value = nodes.value.filter(n => n.type !== 'end');
+  nodes.value = nodes.value.filter((n) => n.type !== "end");
   // 1) ¿Hay ya alguna bifurcación en el canvas?
-  const hasBranch = nodes.value.some(n => n.type === "branch");
+  const hasBranch = nodes.value.some((n) => n.type === "branch");
 
   // 2) parentX = centerX solo la primera vez, luego offset relativo al add clicado
-  const parentX = !hasBranch
-    ? centerX
-    : editingNode.value.position.x - 60;
+  const parentX = !hasBranch ? centerX : editingNode.value.position.x - 60;
 
   // Generamos los ids
-  const branchId   = `branch-${Date.now()}`;
-  const leftId     = `simple-left-${Date.now()}`;
-  const rightId    = `simple-right-${Date.now()}`;
-  const leftAddId  = `add-left-${Date.now()}`;
+  const branchId = `branch-${Date.now()}`;
+  const leftId = `simple-left-${Date.now()}`;
+  const rightId = `simple-right-${Date.now()}`;
+  const leftAddId = `add-left-${Date.now()}`;
   const rightAddId = `add-right-${Date.now()}`;
-  const leftEndId  = `end-left-${Date.now()}`;
+  const leftEndId = `end-left-${Date.now()}`;
   const rightEndId = `end-right-${Date.now()}`;
 
   // Movemos todo lo que venga después hacia abajo
-  const nodesAfter = nodes.value.filter(n => n.position.y > clickedY);
-  nodesAfter.forEach(n => n.position.y += 320);
+  const nodesAfter = nodes.value.filter((n) => n.position.y > clickedY);
+  nodesAfter.forEach((n) => (n.position.y += 320));
 
   // Insertamos
   nodes.value.push(
     {
       id: branchId,
       type: "branch",
-      position: { x: parentX,       y: clickedY + 60 },
+      position: { x: parentX, y: clickedY + 60 },
       data: { label: "Paso rama" },
     },
     {
@@ -505,7 +510,7 @@ function addBranchNode() {
     {
       id: leftAddId,
       type: "add",
-      position: { x: parentX - 92,  y: clickedY + 240 },
+      position: { x: parentX - 92, y: clickedY + 240 },
     },
     {
       id: rightAddId,
@@ -530,9 +535,9 @@ function addBranchNode() {
   sidebarOpen.value = false;
 }
 
-const gotoState  = reactive({
+const gotoState = reactive({
   currentId: null,
-  parentIds:[], 
+  parentIds: [],
 });
 
 function addGotoNode() {
@@ -544,9 +549,9 @@ function addGotoNode() {
   // Crear nodo goto
   nodes.value.push({
     id: gotoId,
-    type: 'goto',
+    type: "goto",
     position: { x, y: y + 60 },
-    data: { icon: null }
+    data: { icon: null },
   });
 
   // Activar modo goto
@@ -555,15 +560,13 @@ function addGotoNode() {
   gotoMode.sourceY = y + 60;
 
   // Activar pulsación en nodos objetivo disponibles
-  availableTargetNodes.value.forEach(node => {
+  availableTargetNodes.value.forEach((node) => {
     node.data.pulsing = true;
     updateNodeInternals(node.id);
   });
 
   sidebarOpen.value = false;
 }
-
-
 
 // Guardar edición de nombre
 function saveEdit() {
@@ -737,12 +740,19 @@ function deleteNode() {
 
 :deep(.vue-flow__node[data-id="start"]) {
   background-color: #a5d6a7;
-  color:#f4f4f4;
-
+  color: #f4f4f4;
 }
-:deep(.vue-flow__node[data-id="end"]) {
+:deep(.vue-flow__node[type="end"]) {
   background-color: #bbb;
   // color:#f4f4f4;
-  
+}
+.node-icon {
+  border-radius: 8px;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-color, #333);
+  background-color: var(--icon-bg, transparent);
 }
 </style>

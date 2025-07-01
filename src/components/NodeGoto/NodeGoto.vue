@@ -1,7 +1,17 @@
 <template>
   <div class="node-goto">
     <div class="node-goto__content">
-      <q-icon :name="data.icon || ''" :color="data.icon === 'insert_drive_file' ? 'green' : data.icon === 'call_split' ? 'orange' : 'blue'" size="sm" />
+      <q-icon
+        :name="data.icon || ''"
+        :color="
+          data.icon === 'description'
+            ? 'green'
+            : data.icon === 'device_hub'
+            ? 'orange'
+            : 'blue'
+        "
+        size="sm"
+      />
     </div>
     <div class="node-goto__handles">
       <Handle type="target" position="top" />
@@ -11,13 +21,13 @@
 </template>
 
 <script setup>
-import { Handle } from '@vue-flow/core';
+import { Handle } from "@vue-flow/core";
 
 defineProps({
   data: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 });
 </script>
 

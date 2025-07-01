@@ -7,7 +7,10 @@
       :style="{ top: '0px', opacity: 1 }"
     />
     <div class="content">
-      <q-icon name="call_split" size="20px" color="orange" />
+      <q-icon  class="node-icon"
+              style="--icon-bg: #ffcc8033"
+              name="device_hub"
+              color="orange"/>
       <div class="label">{{ data.label }}</div>
     </div>
     <Handle
@@ -63,6 +66,15 @@ defineProps({
 .label {
   font-size: 14px;
   color: #666;
+}
+.node-icon {
+  border-radius: 8px;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-color, #333);
+  background-color: var(--icon-bg, transparent);
 }
 .pulse-animation {
   animation: pulse 1.5s ease-in-out infinite;
