@@ -102,14 +102,12 @@
 <script setup>
 import { ref, reactive, computed } from "vue";
 import { VueFlow, useVueFlow } from "@vue-flow/core";
+import AddNode from "../AddNode/AddNode.vue";
 import NodeSimpleStep from "../NodeSimple/NodeSimpleStep.vue";
-import NodeGoto from "../NodeGoto/NodeGoto.vue";
-
-
 import NodeBranch from "../NodeBranch/NodeBranch.vue";
 import NodeBranchChild from "../NodeBranch/NodeBranchChild.vue";
-import AddNode from "../AddNode/AddNode.vue";
-import GotoNode from '../GotoNode/GotoNode.vue';
+import NodeGoto from "../NodeGoto/NodeGoto.vue";
+
 import {
   QDrawer,
   QToolbar,
@@ -441,13 +439,13 @@ function addSimpleNode() {
     {
       id: simpleId,
       type: "simple-step",
-      position: { x: parentX,     y: clickedY + 60 },
+      position: { x: parentX,y: clickedY + 60 },
       data: { label: "Paso simple" },
     },
     {
       id: newAddId,
       type: "add",
-      position: { x: parentX + 73,     y: clickedY + 120 }, 
+      position: { x: parentX + 73, y: clickedY + 120 }, 
     }
   );
 
@@ -735,5 +733,16 @@ function deleteNode() {
   to {
     stroke-dashoffset: -20;
   }
+}
+
+:deep(.vue-flow__node[data-id="start"]) {
+  background-color: #a5d6a7;
+  color:#f4f4f4;
+
+}
+:deep(.vue-flow__node[data-id="end"]) {
+  background-color: #bbb;
+  // color:#f4f4f4;
+  
 }
 </style>

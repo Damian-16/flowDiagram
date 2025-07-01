@@ -1,7 +1,7 @@
 <template>
   <div class="node-goto">
     <div class="node-goto__content">
-      <q-icon :name="data.icon || 'arrow_forward'" :color="data.icon === 'insert_drive_file' ? 'green' : data.icon === 'call_split' ? 'orange' : 'blue'" size="sm" />
+      <q-icon :name="data.icon || ''" :color="data.icon === 'insert_drive_file' ? 'green' : data.icon === 'call_split' ? 'orange' : 'blue'" size="sm" />
     </div>
     <div class="node-goto__handles">
       <Handle type="target" position="top" />

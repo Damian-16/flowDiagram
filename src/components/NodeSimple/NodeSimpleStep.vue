@@ -1,6 +1,7 @@
 <!-- src/components/Nodes/NodeSimpleStep.vue -->
 <template>
-  <div class="simple-step-node" :class="{ 'pulse-animation': data.pulsing }">
+  <div class="simple-step-node"  :class="{ 'pulse-animation': data.pulsing }">
+    
     <Handle type="target" position="top" id="top" />
     <q-icon name="insert_drive_file" class="step-icon" />
     <span class="step-label">{{ data.label }}</span>
