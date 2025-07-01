@@ -773,19 +773,18 @@ function deleteNode() {
     />
 
     <!-- 2) Sidebar -->
-    <Sidebar
-      :sidebar-open="sidebarOpen"
-      :editing-node="editingNode"
-      :editing-label.sync="editingLabel"
-      :branch-left-label.sync="branchLeftLabel"
-      :branch-right-label.sync="branchRightLabel"
-       @add-simple="() => { console.log('🔥 FlowBoard recibió add-simple'); addSimpleNode() }"
-      @add-branch="addBranchNode"
-      @add-goto="addGotoNode"
-      @save-edit="saveEdit"
-      @delete-node="deleteNode"
-      @close="closeSidebar"
-    />
+   <Sidebar
+     v-model:sidebar-open="sidebarOpen"
+     v-model:editing-label="editingLabel"
+     v-model:branch-left-label="branchLeftLabel"
+     v-model:branch-right-label="branchRightLabel"
+     :editing-node="editingNode"
+     @add-simple="addSimpleNode"
+     @add-branch="addBranchNode"
+     @add-goto="addGotoNode"
+     @save-edit="saveEdit"
+     @delete-node="deleteNode"
+   />
   </div>
 </template>
 

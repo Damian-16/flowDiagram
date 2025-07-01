@@ -144,30 +144,26 @@ export function useFlowBoard() {
   }
 
   // Funciones de eventos
-function onNodeClick({ node }) {
-  // Si estamos en modo GoTo y clicamos UN PADRE
+function onNodeClick({ node }: { node: FlowNode }) {
+  // 1) Modo GoTo: si está activo y clicas un objetivo válido
   if (gotoMode.active && availableTargetNodes.value.includes(node)) {
-    // 1) Parar pulso en todos los nodos objetivo
-    availableTargetNodes.value.forEach((targetNode) => {
-      targetNode.data.pulsing = false;
-      updateNodeInternals(targetNode.id);
+    // Detener pulso de todos los objetivos
+    availableTargetNodes.value.forEach((t) => {
+      t.data.pulsing = false;
+      updateNodeInternals(t.id);
     });
 
-    // 2) Poner icono del nodo clickeado en el goto
+    // Poner icono en el nodo goto
     const gotoNode = nodes.value.find((n) => n.id === gotoMode.sourceNodeId);
     if (gotoNode) {
-      // Asignar el ícono del nodo clickeado
-      if (node.type === "simple-step") {
-        gotoNode.data.icon = "description";
-      } else if (node.type === "branch") {
-        gotoNode.data.icon = "device_hub";
-      }
-      updateNodeInternals(gotoMode.sourceNodeId);
+      gotoNode.data.icon =
+        node.type === "branch" ? "device_hub" : "description";
+      updateNodeInternals(gotoMode.sourceNodeId!);
 
-      // 3) Dibujar arista dashed animada goto→nodo clickeado
+      // Crear edge dash animado
       edges.value.push({
         id: `e-${gotoMode.sourceNodeId}-${node.id}`,
-        source: gotoMode.sourceNodeId,
+        source: gotoMode.sourceNodeId!,
         target: node.id,
         type: "straight",
         sourceHandle: "bottom",
@@ -181,43 +177,57 @@ function onNodeClick({ node }) {
       });
     }
 
-    // 4) Limpiar modo GoTo
+    // Salir de modo GoTo
     gotoMode.active = false;
     gotoMode.sourceNodeId = null;
     gotoMode.sourceY = null;
     return;
   }
+
+  // 2) Clicar un "+" (add) → abrir sidebar de "Agregar"
   if (node.type === "add") {
-    // modo Agregar
     editingNode.value = node;
     sidebarOpen.value = true;
-  } else if (node.type === "simple-step") {
-    // modo Editar
-    editingNode.value = node;
-    editingLabel.value = node.data.label || "";
-    sidebarOpen.value = true;
-  } else if (node.type === "branch") {
-    // modo Editar rama
+    return;
+  }
+
+  // 3) Clicar un nodo branch → abrir sidebar con padre + hijos
+  if (node.type === "branch") {
     editingNode.value = node;
     editingLabel.value = node.data.label || "";
 
-    // Buscar nodos hijos (izquierda y derecha)
-    const leftNode = nodes.value.find(
+    // Buscamos ambos hijos branch-child
+    const leftChild = nodes.value.find(
       (n) =>
+        n.type === "branch-child" &&
         Math.abs(n.position.y - node.position.y - 100) < 10 &&
         Math.abs(n.position.x - (node.position.x - 150)) < 10
     );
-    const rightNode = nodes.value.find(
+    const rightChild = nodes.value.find(
       (n) =>
+        n.type === "branch-child" &&
         Math.abs(n.position.y - node.position.y - 100) < 10 &&
         Math.abs(n.position.x - (node.position.x + 150)) < 10
     );
 
-    branchLeftLabel.value = leftNode?.data.label || "";
-    branchRightLabel.value = rightNode?.data.label || "";
+    branchLeftLabel.value = leftChild?.data.label || "";
+    branchRightLabel.value = rightChild?.data.label || "";
+
     sidebarOpen.value = true;
+    return;
   }
+
+  // 4) Clicar simple-step o branch-child → abrir sólo la etiqueta
+  if (node.type === "simple-step" || node.type === "branch-child") {
+    editingNode.value = node;
+    editingLabel.value = node.data.label || "";
+    sidebarOpen.value = true;
+    return;
+  }
+
+  // 5) Cualquier otro tipo (start, end, goto...) → no hacemos nada
 }
+
  // Agregar un nuevo simple-step
 function addSimpleNode() {
   console.log('🔥 useFlowBoard.addSimpleNode() disparada');
@@ -353,6 +363,7 @@ function addSimpleNode() {
   sidebarOpen.value = false;
 }
   function saveEdit() {
+    
   if (editingNode.value) {
     if (editingNode.value.type === "branch") {
       // Actualizar etiqueta del nodo rama

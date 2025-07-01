@@ -67,8 +67,8 @@
       </template>
       <div class="q-mt-md row justify-end">
         <q-btn color="negative" flat label="Eliminar" @click="emit('delete-node')" />
-        <q-btn flat label="Cancelar" @click="emit('update:sidebarOpen', false)" class="q-mr-sm" />
-        <q-btn color="primary" label="Confirmar" @click="emit('save-edit')" />
+        <q-btn flat label="Cancelar" @click="emit('close')" class="q-mr-sm" />
+        <q-btn color="primary" label="Confirmar"  @click="() => { emit('save-edit'); emit('close') }"/>
       </div>
     </div>
   </q-drawer>
