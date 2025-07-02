@@ -1,4 +1,4 @@
-<!-- src/components/Nodes/AddNode.vue -->
+
 <template>
   <div class="add-node-container">
     <Handle type="target" position="top" id="top" />

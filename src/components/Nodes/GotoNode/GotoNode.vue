@@ -5,7 +5,7 @@
 
     <div v-if="data.pulsing" class="pulse-overlay" />
 
-    <!-- icono que hereda del padre una vez seleccionado -->
+    
     <q-icon
       v-if="data.icon"
       :name="data.icon"

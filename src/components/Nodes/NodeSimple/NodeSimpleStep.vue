@@ -1,4 +1,4 @@
-<!-- src/components/Nodes/NodeSimpleStep.vue -->
+
 <template>
   <div class="simple-step-node" :class="{ 'pulse-animation': data.pulsing }">
     <Handle type="target" position="top" id="top" />
