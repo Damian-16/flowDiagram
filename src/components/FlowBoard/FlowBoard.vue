@@ -356,53 +356,72 @@ function closeSidebar() {
 
 // Maneja clicks en nodos
 function onNodeClick({ node }) {
-  // Si estamos en modo GoTo y clicamos UN PADRE
-  if (gotoMode.active && availableTargetNodes.value.includes(node)) {
-    // 1) Parar pulso en todos los nodos objetivo
-    availableTargetNodes.value.forEach((targetNode) => {
-      targetNode.data.pulsing = false;
-      updateNodeInternals(targetNode.id);
-    });
+  // Si estamos en modo goto o es un nodo goto, manejamos la lógica de goto
+  if (gotoMode.active || node.type === 'goto') {
+    // 1) Si clicas un goto, activo el modo y pulso los nodos objetivo
+    if (node.type === 'goto') {
+      gotoMode.active = true;
+      gotoMode.sourceNodeId = node.id;
+      gotoMode.sourceY = node.position.y;
 
-    // 2) Poner icono del nodo clickeado en el goto
-    const gotoNode = nodes.value.find((n) => n.id === gotoMode.sourceNodeId);
-    if (gotoNode) {
-      // Asignar el ícono del nodo clickeado
-      if (node.type === "simple-step") {
-        gotoNode.data.icon = "description";
-      } else if (node.type === "branch") {
-        gotoNode.data.icon = "device_hub";
-      }
-      updateNodeInternals(gotoMode.sourceNodeId);
-
-      // 3) Dibujar arista dashed animada goto→nodo clickeado
-      edges.value.push({
-        id: `e-${gotoMode.sourceNodeId}-${node.id}`,
-        source: gotoMode.sourceNodeId,
-        target: node.id,
-        type: "straight",
-        sourceHandle: "bottom",
-        targetHandle: "top",
-        style: {
-          strokeWidth: 2,
-          stroke: "#2196f3",
-          strokeDasharray: "10 10",
-          animation: "flowDash 0.5s linear infinite",
-        },
+      // Activar pulsación en nodos objetivo
+      availableTargetNodes.value.forEach(targetNode => {
+        targetNode.data.pulsing = true;
+        updateNodeInternals(targetNode.id);
       });
+      return;
     }
 
-    // 4) Limpiar modo GoTo
-    gotoMode.active = false;
-    gotoMode.sourceNodeId = null;
-    gotoMode.sourceY = null;
+    // 2) Si estamos en modo GoTo y clicamos un nodo objetivo
+    if (gotoMode.active && availableTargetNodes.value.includes(node)) {
+      // 1) Parar pulso en todos los nodos objetivo
+      availableTargetNodes.value.forEach((targetNode) => {
+        targetNode.data.pulsing = false;
+        updateNodeInternals(targetNode.id);
+      });
+
+      // 2) Poner icono del nodo clickeado en el goto
+      const gotoNode = nodes.value.find((n) => n.id === gotoMode.sourceNodeId);
+      if (gotoNode) {
+        // Asignar el ícono del nodo clickeado
+        if (node.type === "simple") {
+          gotoNode.data.icon = "description";
+        } else if (node.type === "branch") {
+          gotoNode.data.icon = "device_hub";
+        }
+        updateNodeInternals(gotoMode.sourceNodeId);
+
+        // 3) Dibujar arista dashed animada goto→nodo clickeado
+        edges.value.push({
+          id: `e-${gotoMode.sourceNodeId}-${node.id}`,
+          source: gotoMode.sourceNodeId,
+          target: node.id,
+          type: "straight",
+          sourceHandle: "bottom",
+          targetHandle: "top",
+          style: {
+            strokeWidth: 2,
+            stroke: "#2196f3",
+            strokeDasharray: "10 10",
+            animation: "flowDash 0.5s linear infinite",
+          },
+        });
+      }
+
+      // 4) Limpiar modo GoTo
+      gotoMode.active = false;
+      gotoMode.sourceNodeId = null;
+      gotoMode.sourceY = null;
+    }
     return;
   }
+
+  // Si no estamos en modo goto, manejamos la edición
   if (node.type === "add") {
     // modo Agregar
     editingNode.value = node;
     sidebarOpen.value = true;
-  } else if (node.type === "simple-step") {
+  } else if (node.type === "simple") {
     // modo Editar
     editingNode.value = node;
     editingLabel.value = node.data.label || "";
@@ -427,6 +446,7 @@ function onNodeClick({ node }) {
     branchLeftLabel.value = leftNode?.data.label || "";
     branchRightLabel.value = rightNode?.data.label || "";
     sidebarOpen.value = true;
+    }
   }
 }
 
@@ -450,7 +470,7 @@ function addSimpleNode() {
   nodes.value.push(
     {
       id: simpleId,
-      type: "simple-step",
+      type: "simple",
       position: { x: parentX, y: clickedY + 60 },
       data: { label: "Paso simple" },
     },

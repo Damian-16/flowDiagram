@@ -145,80 +145,58 @@ export function useFlowBoard() {
 
   // Funciones de eventos
 function onNodeClick({ node }: { node: FlowNode }) {
-  // 1) Si clicas un nodo “goto”, lo activamos y salimos.
-  if (node.type === 'goto') {
-    // Entramos en modo GoTo
-    gotoMode.active       = true;
-    gotoMode.sourceNodeId = node.id;
-    gotoMode.sourceY      = node.position.y;
+  console.log(
+    '🔥 click en nodo:', node.id,
+    '– type:', node.type,
+    '– gotoMode.active:', gotoMode.active
+  );
 
-    // Buscamos todos los padres que apuntan a este goto
-    const parents = edges.value
-      .filter(e => e.target === node.id)
-      .map(e => e.source);
-
-    // Disparamos la pulsación en cada padre
-    parents.forEach(pid => {
-      const p = nodes.value.find(n => n.id === pid);
-      if (p) {
-        p.data.pulsing = true;
-        updateNodeInternals(pid);
-      }
+  // ── 1) Si estamos en modo GoTo, conecto con el nodo clickeado y salgo ───────────────
+  if (gotoMode.active && gotoMode.sourceNodeId) {
+    // Detengo la pulsación en los nodos objetivo
+    availableTargetNodes.value.forEach(targetNode => {
+      targetNode.data.pulsing = false;
+      updateNodeInternals(targetNode.id);
     });
 
+    // Asigno el ícono correcto al nodo goto según el tipo del nodo clickeado
+    const gotoNode = nodes.value.find(n => n.id === gotoMode.sourceNodeId);
+    if (gotoNode) {
+      gotoNode.data.icon = node.type === 'branch' ? 'device_hub' : 'description';
+      updateNodeInternals(gotoNode.id);
+    }
+
+    // Dibujo la arista dashed goto→nodo clickeado
+    edges.value.push({
+      id: `e-${gotoMode.sourceNodeId}-${node.id}`,
+      source: gotoMode.sourceNodeId,
+      target: node.id,
+      type: 'straight',
+      sourceHandle: 'bottom',
+      targetHandle: 'top',
+      style: {
+        strokeWidth: 2,
+        stroke: '#2196f3',
+        strokeDasharray: '10 10',
+        animation: 'flowDash 0.5s linear infinite',
+      },
+    });
+
+    // Salgo del modo GoTo
+    gotoMode.active = false;
+    gotoMode.sourceNodeId = null;
+    gotoMode.sourceY = null;
     return;
   }
 
-  // 2) Si ya estamos en modo GoTo y clicas uno de los padres…
-  if (gotoMode.active) {
-    const isParent = edges.value.some(
-      e => e.source === node.id && e.target === gotoMode.sourceNodeId
-    );
-    if (isParent) {
-      // Parar pulso en todos los padres
-      edges.value
-        .filter(e => e.target === gotoMode.sourceNodeId)
-        .map(e => e.source)
-        .forEach(pid => {
-          const p = nodes.value.find(n => n.id === pid);
-          if (p) {
-            p.data.pulsing = false;
-            updateNodeInternals(pid);
-          }
-        });
-
-      // Conectar el goto al padre clicado con línea dashed animada
-      edges.value.push({
-        id: `e-${gotoMode.sourceNodeId}-${node.id}`,
-        source: gotoMode.sourceNodeId!,
-        target: node.id,
-        type: 'straight',
-        sourceHandle: 'bottom',
-        targetHandle: 'top',
-        style: {
-          strokeWidth: 2,
-          stroke: '#2196f3',
-          strokeDasharray: '10 10',
-          animation: 'flowDash 0.5s linear infinite',
-        },
-      });
-
-      // Salir del modo GoTo
-      gotoMode.active       = false;
-      gotoMode.sourceNodeId = null;
-      gotoMode.sourceY      = null;
-      return;
-    }
-  }
-
-  // 3) Si clicas el “+” (add), abro el drawer de “Agregar…”
+  // ── 2) Si clicas “+” (add), abro Sidebar de “Agregar” ────────────────
   if (node.type === 'add') {
     editingNode.value = node;
     sidebarOpen.value = true;
     return;
   }
 
-  // 4) Si clicas un simple-step o un branch-child, abro “Editar Paso simple”
+  // ── 3) Si clicas simple-step o branch-child, abro “Editar Paso simple” ─
   if (node.type === 'simple-step' || node.type === 'branch-child') {
     editingNode.value  = node;
     editingLabel.value = node.data.label || '';
@@ -226,31 +204,32 @@ function onNodeClick({ node }: { node: FlowNode }) {
     return;
   }
 
-  // 5) Si clicas un branch, abro “Editar Bifurcación” Y cargo sus hijos
+  // ── 4) Si clicas branch, abro “Editar Bifurcación” y cargo hijos ────
   if (node.type === 'branch') {
     editingNode.value  = node;
     editingLabel.value = node.data.label || '';
 
-    const left  = nodes.value.find(
-      n => n.type === 'branch-child'
-        && Math.abs(n.position.y - node.position.y - 100) < 10
-        && Math.abs(n.position.x - (node.position.x - 150)) < 10
+    const left = nodes.value.find(n =>
+      n.type === 'branch-child' &&
+      Math.abs(n.position.y - node.position.y - 100) < 10 &&
+      Math.abs(n.position.x - (node.position.x - 150)) < 10
     );
-    const right = nodes.value.find(
-      n => n.type === 'branch-child'
-        && Math.abs(n.position.y - node.position.y - 100) < 10
-        && Math.abs(n.position.x - (node.position.x + 150)) < 10
+    const right = nodes.value.find(n =>
+      n.type === 'branch-child' &&
+      Math.abs(n.position.y - node.position.y - 100) < 10 &&
+      Math.abs(n.position.x - (node.position.x + 150)) < 10
     );
 
     branchLeftLabel.value  = left?.data.label  || '';
     branchRightLabel.value = right?.data.label || '';
-
-    sidebarOpen.value = true;
+    sidebarOpen.value      = true;
     return;
   }
 
-  // 6) cualquier otro (start/end) no hace nada
+  // ── 5) start/end: nada ────────────────────────────────────────────────
 }
+
+
 
 
 
