@@ -16,7 +16,7 @@ interface GoToMode {
 }
 
 export function useFlowBoard() {
-  // Constantes y estado inicial
+
   const centerX = 550;
   const { updateNodeInternals }: any = useVueFlow();
   const lastEndPosition = ref<{ x: number; y: number } | null>(null);
@@ -29,10 +29,10 @@ export function useFlowBoard() {
   ]);
   const edges = ref<FlowEdge[]>([]);
 
-  // Tipos de nodo
 
 
-  // Tipos de nodo (con imports estáticos para evitar Promise/dynamic issues)
+
+ 
   const nodeTypes = {
     add: AddNode,
     'simple-step': NodeSimpleStep,
@@ -41,14 +41,14 @@ export function useFlowBoard() {
     goto: NodeGoto,
   };
 
-  // Estado del modo 'Go To'
+ 
   const gotoMode = reactive<GoToMode>({
     active: false,
     sourceNodeId: null,
     sourceY: null,
   });
 
-  // Nodos disponibles como objetivos en 'Go To'
+ 
   const availableTargetNodes = computed<FlowNode[]>(() => {
     if (!gotoMode.active) return [];
     return nodes.value.filter(
@@ -56,7 +56,7 @@ export function useFlowBoard() {
     );
   });
 
-  // Reconstruye las aristas
+ 
   function rebuildEdges(): void {
     edges.value = [];
     nodes.value.forEach((node) => {
@@ -77,8 +77,7 @@ export function useFlowBoard() {
         return;
       }
       if (node.type === 'branch') {
-        // Lógica de branch intacta
-        // (idéntica a la versión JS)
+       
         const leftNode = nodes.value.find(
           n => Math.abs(n.position.y - node.position.y - 100) < 10 && Math.abs(n.position.x - (node.position.x - 150)) < 10
         );
@@ -128,7 +127,7 @@ export function useFlowBoard() {
     });
   }
 
-  // Estado y funciones del Sidebar
+
   const sidebarOpen = ref<boolean>(false);
   const editingNode = ref<FlowNode | null>(null);
   const editingLabel = ref<string>('');
@@ -143,15 +142,15 @@ export function useFlowBoard() {
     branchRightLabel.value = '';
   }
 
-  // Funciones de eventos
+ 
 function onNodeClick({ node }: { node: FlowNode }) {
-  console.log(
-    '🔥 click en nodo:', node.id,
-    '– type:', node.type,
-    '– gotoMode.active:', gotoMode.active
-  );
+  // console.log(
+  //   ' click en nodo:', node.id,
+  //   '– type:', node.type,
+  //   '– gotoMode.active:', gotoMode.active
+  // );
 
-  // ── 1) Si estamos en modo GoTo, conecto con el nodo clickeado y salgo ───────────────
+
   if (gotoMode.active && gotoMode.sourceNodeId) {
     // Detengo la pulsación en los nodos objetivo
     availableTargetNodes.value.forEach(targetNode => {
@@ -182,21 +181,21 @@ function onNodeClick({ node }: { node: FlowNode }) {
       },
     });
 
-    // Salgo del modo GoTo
+ 
     gotoMode.active = false;
     gotoMode.sourceNodeId = null;
     gotoMode.sourceY = null;
     return;
   }
 
-  // ── 2) Si clicas “+” (add), abro Sidebar de “Agregar” ────────────────
+
   if (node.type === 'add') {
     editingNode.value = node;
     sidebarOpen.value = true;
     return;
   }
 
-  // ── 3) Si clicas simple-step o branch-child, abro “Editar Paso simple” ─
+  
   if (node.type === 'simple-step' || node.type === 'branch-child') {
     editingNode.value  = node;
     editingLabel.value = node.data.label || '';
@@ -204,7 +203,6 @@ function onNodeClick({ node }: { node: FlowNode }) {
     return;
   }
 
-  // ── 4) Si clicas branch, abro “Editar Bifurcación” y cargo hijos ────
   if (node.type === 'branch') {
     editingNode.value  = node;
     editingLabel.value = node.data.label || '';
@@ -226,7 +224,7 @@ function onNodeClick({ node }: { node: FlowNode }) {
     return;
   }
 
-  // ── 5) start/end: nada ────────────────────────────────────────────────
+
 }
 
 
@@ -234,24 +232,23 @@ function onNodeClick({ node }: { node: FlowNode }) {
 
 
 
- // Agregar un nuevo simple-step
 function addSimpleNode() {
   console.log('🔥 useFlowBoard.addSimpleNode() disparada');
   if (!editingNode.value) return;
 
   const clickedY = editingNode.value.position.y;
-  const parentX = editingNode.value.position.x - 73; // 🔥 la X del "+" que abriste
+  const parentX = editingNode.value.position.x - 73; 
 
-  // 1) Bajamos todos los nodos que vienen después
+
   nodes.value
     .filter((n) => n.position.y > clickedY)
     .forEach((n) => (n.position.y += 120));
 
-  // 2) Generamos IDs
+
   const simpleId = `simple-${Date.now()}`;
   const newAddId = `add-${Date.now()}`;
 
-  // 3) Insertamos el paso y el siguiente "+"
+  
   nodes.value.push(
     {
       id: simpleId,
@@ -275,13 +272,13 @@ function addSimpleNode() {
 
   const clickedY = editingNode.value.position.y;
   nodes.value = nodes.value.filter((n) => n.type !== "end");
-  // 1) ¿Hay ya alguna bifurcación en el canvas?
+
   const hasBranch = nodes.value.some((n) => n.type === "branch");
 
-  // 2) parentX = centerX solo la primera vez, luego offset relativo al add clicado
+  
   const parentX = !hasBranch ? centerX : editingNode.value.position.x - 60;
 
-  // Generamos los ids
+  
   const branchId = `branch-${Date.now()}`;
   const leftId = `simple-left-${Date.now()}`;
   const rightId = `simple-right-${Date.now()}`;
@@ -290,11 +287,10 @@ function addSimpleNode() {
   const leftEndId = `end-left-${Date.now()}`;
   const rightEndId = `end-right-${Date.now()}`;
 
-  // Movemos todo lo que venga después hacia abajo
   const nodesAfter = nodes.value.filter((n) => n.position.y > clickedY);
   nodesAfter.forEach((n) => (n.position.y += 320));
 
-  // Insertamos
+
   nodes.value.push(
     {
       id: branchId,
@@ -347,7 +343,7 @@ function addSimpleNode() {
   const { x, y } = editingNode.value.position;
   const gotoId = `goto-${Date.now()}`;
 
-  // Crear nodo goto
+ 
   nodes.value.push({
     id: gotoId,
     type: "goto",
@@ -355,7 +351,7 @@ function addSimpleNode() {
     data: { icon: null },
   });
 
-  // Activar modo goto
+
   gotoMode.active = true;
   gotoMode.sourceNodeId = gotoId;
   gotoMode.sourceY = y + 60;
@@ -372,7 +368,7 @@ function addSimpleNode() {
     
   if (editingNode.value) {
     if (editingNode.value.type === "branch") {
-      // Actualizar etiqueta del nodo rama
+      
       editingNode.value.data.label = editingLabel.value;
       updateNodeInternals(editingNode.value.id);
 
@@ -404,7 +400,7 @@ function addSimpleNode() {
   }
   closeSidebar();
 }
- // Eliminar nodo
+ 
 function deleteNode() {
   if (
     !editingNode.value ||
@@ -429,7 +425,7 @@ function deleteNode() {
         Math.abs(n.position.x - (editingNode.value.position.x + 150)) < 10
     );
 
-    // Encontrar botones add y nodos fin
+    
     if (leftNode) {
       nodesToDelete.push(leftNode.id);
       const leftAdd = nodes.value.find(
@@ -469,7 +465,7 @@ function deleteNode() {
     }
   }
 
-  // Agregar el nodo actual a la lista de eliminación
+  
   nodesToDelete.push(editingNode.value.id);
 
   // Eliminar todos los nodos marcados
@@ -507,7 +503,7 @@ function deleteNode() {
   closeSidebar();
 }
 
-  // Iniciar aristas
+ 
   rebuildEdges();
 
   return {

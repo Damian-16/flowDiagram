@@ -12,7 +12,7 @@
     </q-toolbar>
 
     <q-list v-if="editingNode?.type === 'add'">
-      <q-item clickable  @click="() => { console.log('🔥 Sidebar emite add-simple'); emit('add-simple') }">
+      <q-item clickable  @click="() => { console.log(' emite add-simple'); emit('add-simple') }">
         <q-item-section avatar>
           <q-icon class="node-icon" style="--icon-bg: #90ee9033" name="description" />
         </q-item-section>
@@ -109,7 +109,7 @@ const emit = defineEmits<{
   (e: 'delete-node'): void;
 }>();
 
-// v-model bindings locales
+
 const sidebarOpenLocal = computed({
   get:  () => props.sidebarOpen,
   set: (v: boolean) => emit('update:sidebarOpen', v),
@@ -127,7 +127,7 @@ const branchRightLabelLocal = computed({
   set: (v: string) => emit('update:branchRightLabel', v),
 });
 
-// Título dinámico
+
 const title = computed(() => {
   const t = props.editingNode?.type;
   if (t === 'branch')      return 'Paso Branch';
